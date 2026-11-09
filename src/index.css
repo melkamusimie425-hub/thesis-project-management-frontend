@@ -191,6 +191,7 @@ input, select, textarea { font-family: inherit; }
   font-size: 10.5px;
   color: var(--text-dim);
   text-align: center;
+  line-height: 1.6;
 }
 
 /* ── Main area ── */

@@ -59,7 +59,8 @@ export default function Sidebar({ open, onClose }) {
         </nav>
 
         <div className="sidebar-footer">
-          © {new Date().getFullYear()} School of Information Science
+          © {new Date().getFullYear()} Melkamu Sime · All Rights Reserved<br />
+          <span style={{ fontSize: 10, opacity: .6 }}>School of Information Science · WSU</span>
         </div>
       </aside>
     </>

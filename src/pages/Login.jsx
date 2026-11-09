@@ -360,7 +360,7 @@ export default function Login() {
               <Shield size={13} style={{ color:'#10b981' }} />
               <span>Secured Portal</span>
             </div>
-            <span>© {new Date().getFullYear()} WSU · SIS</span>
+            <span>© {new Date().getFullYear()} Melkamu Sime · WSU · SIS</span>
           </div>
         </div>
 
@@ -539,12 +539,17 @@ export default function Login() {
             )}
 
             {/* Footer */}
-            <div style={{ textAlign:'center', fontSize:11, color:dark?'rgba(255,255,255,.2)':'rgba(13,46,21,.3)', marginTop:18, display:'flex', justifyContent:'center', gap:12 }}>
-              <span style={{ cursor:'pointer' }}>Privacy Policy</span>
-              <span>•</span>
-              <span style={{ cursor:'pointer' }}>Terms of Service</span>
-              <span>•</span>
-              <span style={{ cursor:'pointer' }}>System Status</span>
+            <div style={{ textAlign:'center', fontSize:11, color:dark?'rgba(255,255,255,.2)':'rgba(13,46,21,.3)', marginTop:18, display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
+              <div style={{ display:'flex', justifyContent:'center', gap:12 }}>
+                <span style={{ cursor:'pointer' }}>Privacy Policy</span>
+                <span>•</span>
+                <span style={{ cursor:'pointer' }}>Terms of Service</span>
+                <span>•</span>
+                <span style={{ cursor:'pointer' }}>System Status</span>
+              </div>
+              <div style={{ fontSize:10.5 }}>
+                © {new Date().getFullYear()} <strong style={{ color: dark?'rgba(200,168,0,.8)':'rgba(26,92,42,.8)' }}>Melkamu Sime</strong> · All Rights Reserved
+              </div>
             </div>
           </div>
         </div>
