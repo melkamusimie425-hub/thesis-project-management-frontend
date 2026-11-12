@@ -494,3 +494,215 @@ table.data tr:last-child td { border-bottom: 0; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(200,168,0,.3); }
+
+/* ==========================================================================
+   RESPONSIVE — Mobile, Tablet, Desktop
+   ========================================================================== */
+
+/* ── Mobile first base ── */
+@media (max-width: 480px) {
+  :root {
+    --topbar-h: 58px;
+    --radius:   12px;
+  }
+
+  /* Topbar */
+  .topbar { padding: 0 14px; }
+  .topbar .page-title { font-size: 14px; }
+  .topbar .page-sub   { display: none; }
+  .user-chip .uname   { display: none; }
+  .user-chip .urole   { display: none; }
+  .user-chip { padding: 4px; border-radius: 50%; }
+
+  /* Content */
+  .content { padding: 14px; }
+
+  /* Stat grid — 2 columns on mobile */
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat { padding: 14px; }
+  .stat .stat-val { font-size: 20px; }
+  .stat .stat-ic  { width: 36px; height: 36px; font-size: 16px; margin-bottom: 8px; }
+
+  /* Cards */
+  .card-pad { padding: 14px; }
+  .card-head { padding: 12px 14px; }
+  .card-head h3 { font-size: 13px; }
+  .card-body { padding: 14px; }
+
+  /* Forms */
+  .form-row { grid-template-columns: 1fr; }
+  .input, .select, .textarea { font-size: 16px; } /* Prevent iOS zoom */
+
+  /* Tables — horizontal scroll */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.data th, table.data td { padding: 10px 10px; font-size: 12px; white-space: nowrap; }
+
+  /* Buttons */
+  .btn { padding: 9px 14px; font-size: 12px; }
+  .btn-sm { padding: 6px 10px; font-size: 11px; }
+
+  /* Modal */
+  .modal { max-width: 100%; border-radius: 16px 16px 0 0; }
+  .modal-overlay { align-items: flex-end; padding: 0; }
+
+  /* Page head */
+  .page-head h2 { font-size: 17px; }
+
+  /* Theme controls — smaller on mobile */
+  /* (ThemeControls component) */
+}
+
+/* ── Tablet ── */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 240px; }
+
+  .content { padding: 16px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .form-row  { grid-template-columns: 1fr; }
+
+  /* Tables scroll */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.data th, table.data td { white-space: nowrap; }
+}
+
+/* ── Sidebar hidden on mobile/tablet ── */
+@media (max-width: 980px) {
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: none;
+    z-index: 200;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 32px rgba(0,0,0,.6);
+  }
+  .main { margin-left: 0 !important; }
+  .menu-toggle { display: flex !important; }
+
+  .content { padding: 16px; }
+
+  /* Two-column layouts become single column */
+  div[style*="grid-template-columns: 1fr 1fr"],
+  div[style*="grid-template-columns: 320px 1fr"],
+  div[style*="grid-template-columns: 300px 1fr"] {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Stat grid */
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Large screens ── */
+@media (min-width: 1400px) {
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
+  .content { padding: 28px 32px; }
+}
+
+/* ── Login page responsive ── */
+@media (max-width: 860px) {
+  /* Hide left branding panel */
+  .lp-left { display: none !important; }
+
+  /* Right panel takes full width */
+  .lp-right {
+    padding: 20px 16px !important;
+    min-height: 100vh;
+    align-items: flex-start;
+    padding-top: 32px !important;
+  }
+
+  /* Card full width */
+  .lp-card {
+    max-width: 100% !important;
+    border-radius: 20px !important;
+  }
+
+  /* Controls top-right — smaller */
+  div[style*="position:fixed"][style*="top:16"][style*="right:16"],
+  div[style*="position:'fixed'"] {
+    top: 8px !important;
+    right: 8px !important;
+    padding: 6px 10px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .lp-form { padding: 4px 16px 16px !important; }
+  .lp-card-head { padding: 20px 16px 14px !important; }
+  .lp-or, .lp-demo-grid, .lp-demo-note {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .lp-demo-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .lp-card-title { font-size: 20px !important; }
+}
+
+/* ── Dashboard responsive ── */
+@media (max-width: 768px) {
+  /* Welcome header */
+  div[style*="display: grid"][style*="gridTemplateColumns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── ManageUsers table responsive ── */
+@media (max-width: 768px) {
+  /* Hide less important columns on mobile */
+  table.data th:nth-child(4),
+  table.data td:nth-child(4),
+  table.data th:nth-child(5),
+  table.data td:nth-child(5) {
+    display: none;
+  }
+}
+
+/* ── Profile page responsive ── */
+@media (max-width: 768px) {
+  /* Stack photo + details vertically */
+  div[style*="gridTemplateColumns: 300px 1fr"],
+  div[style*="gridTemplateColumns: 320px 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Topbar right section responsive ── */
+@media (max-width: 600px) {
+  .topbar .right { gap: 8px; }
+  .topbar .right .btn { display: none; } /* Hide logout text, show only icon */
+}
+
+/* ── Theme controls responsive ── */
+@media (max-width: 480px) {
+  /* Move theme controls to bottom center on mobile */
+  div[style*="position: fixed"][style*="bottom: 24px"] {
+    bottom: 12px !important;
+    right: 50% !important;
+    transform: translateX(50%) !important;
+  }
+}
+
+/* ── Smooth transitions ── */
+.sidebar, .main, .topbar, .content {
+  transition: all 0.25s ease;
+}
+
+/* ── Touch targets — minimum 44px for accessibility ── */
+.btn, .nav-link, .user-chip {
+  min-height: 40px;
+}
+
+/* ── Prevent horizontal overflow ── */
+html, body { overflow-x: hidden; }
+.content { max-width: 100%; overflow-x: hidden; }
+
+/* ── Fix iOS input zoom ── */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

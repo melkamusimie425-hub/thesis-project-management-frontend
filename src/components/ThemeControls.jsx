@@ -29,6 +29,10 @@ export default function ThemeControls() {
           : '1px solid rgba(26,92,42,.15)',
         boxShadow: '0 8px 32px rgba(0,0,0,.35)',
         userSelect: 'none',
+        /* Mobile: center at bottom */
+        left: window.innerWidth <= 480 ? '50%' : 'auto',
+        transform: window.innerWidth <= 480 ? 'translateX(-50%)' : 'none',
+        right: window.innerWidth <= 480 ? 'auto' : 24,
       }}
       title="Theme controls"
     >

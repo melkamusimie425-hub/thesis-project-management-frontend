@@ -57,7 +57,7 @@ export default function Layout() {
   };
 
   return (
-    <div style={{ ...cssVars, position: 'relative' }}>
+    <div style={{ ...cssVars, position: 'relative', minHeight: '100vh', overflowX: 'hidden' }}>
       {/* ── Animated canvas behind everything ── */}
       <GlobalCanvas />
 

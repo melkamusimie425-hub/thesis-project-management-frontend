@@ -95,7 +95,7 @@ export default function Dashboard() {
       )}
 
       {/* ── Two-column section ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
 
         {/* Announcements */}
         <div className="card">

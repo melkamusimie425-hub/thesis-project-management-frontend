@@ -99,7 +99,7 @@ export default function Profile() {
         <p>View your account details and manage your profile photo.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 18, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'clamp(260px, 30%, 300px) 1fr', gap: 18, alignItems: 'start' }}>
 
         {/* ── Left: Photo card ── */}
         <div style={{ ...GLASS, padding: 24, textAlign: 'center' }}>
