@@ -62,13 +62,13 @@ export default function Topbar({ title, subtitle, onMenu }) {
 
         {/* Logout */}
         <button
-          className="btn btn-ghost btn-sm"
+          className="btn btn-ghost btn-sm logout-btn"
           onClick={() => { logout(); navigate('/login'); }}
-          style={{ fontSize: 12 }}
           title="Logout"
+          aria-label="Logout"
         >
-          <span style={{ display: 'none' }} className="logout-text">⏻ Logout</span>
-          <span>⏻</span>
+          <span className="logout-icon">⏻</span>
+          <span className="logout-text">Logout</span>
         </button>
       </div>
     </header>

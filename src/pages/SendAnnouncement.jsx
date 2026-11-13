@@ -14,16 +14,19 @@ const RECIPIENTS = [
 
 export default function SendAnnouncement() {
   const toast = useToast();
-  const [form, setForm]     = useState({ recipient_role:'all', subject:'', message:'', is_pinned:false });
+  const [form, setForm]     = useState({ recipient_role:'all', subject:'', message:'', is_pinned:false, expires_at:'' });
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     try {
-      await client.post('/notices', form);
+      await client.post('/notices', {
+        ...form,
+        expires_at: form.expires_at || null,
+      });
       toast.success('Announcement sent successfully!');
-      setForm({ recipient_role:'all', subject:'', message:'', is_pinned:false });
+      setForm({ recipient_role:'all', subject:'', message:'', is_pinned:false, expires_at:'' });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send announcement.');
     } finally { setLoading(false); }
@@ -59,6 +62,19 @@ export default function SendAnnouncement() {
                 <div style={{ fontSize:11.5, color:'rgba(226,240,232,.4)' }}>Pinned notices appear at the top of the list</div>
               </div>
             </label>
+            <div className="field">
+              <label>Expiry Date (optional)</label>
+              <input
+                type="date"
+                className="input"
+                value={form.expires_at}
+                onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
+                placeholder="Leave empty for no expiry"
+              />
+              <div style={{ fontSize:11.5, color:'rgba(226,240,232,.4)' }}>
+                When this date passes, the announcement is automatically removed. Leave blank for no expiry.
+              </div>
+            </div>
             <div>
               <button className="btn btn-primary" type="submit" disabled={loading}>
                 {loading ? 'Sending…' : '✉️ Send Announcement'}

@@ -666,10 +666,27 @@ table.data tr:last-child td { border-bottom: 0; }
   }
 }
 
+/* Logout button — text visible by default on screens > 600px */
+.logout-btn .logout-text { display: inline; }
+.logout-btn .logout-icon { display: none; }
+.logout-btn {
+  border: 1px solid rgba(244,63,94,.3);
+  background: rgba(159,18,57,.2);
+  color: #fb7185;
+  min-height: 38px;
+}
+.logout-btn:hover {
+  background: rgba(159,18,57,.35);
+  border-color: rgba(244,63,95,.5);
+  color: #fff;
+}
+
 /* ── Topbar right section responsive ── */
 @media (max-width: 600px) {
   .topbar .right { gap: 8px; }
-  .topbar .right .btn { display: none; } /* Hide logout text, show only icon */
+  /* Show icon-only logout on small screens, text on larger */
+  .logout-btn .logout-text { display: none !important; }
+  .logout-btn .logout-icon { display: inline !important; font-size: 15px; }
 }
 
 /* ── Theme controls responsive ── */
@@ -705,4 +722,45 @@ html, body { overflow-x: hidden; }
   textarea {
     font-size: 16px !important;
   }
+}
+
+/* ==========================================================================
+   PUBLIC PAGES — Responsive (Home, About, Contact, PublicNav)
+   ========================================================================== */
+
+/* Nav on very small screens */
+@media (max-width: 400px) {
+  .pub-nav-links { display: none !important; }
+  .pub-hamburger { display: flex !important; }
+}
+
+/* Hero title on tiny screens */
+@media (max-width: 360px) {
+  h1 { font-size: 22px !important; }
+}
+
+/* Two-col contact form grid → single col on mobile */
+@media (max-width: 540px) {
+  div[style*="gridTemplateColumns: 1fr 1fr"][style*="gap: 14"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Public page section padding on mobile */
+@media (max-width: 480px) {
+  section { padding-left: 14px !important; padding-right: 14px !important; }
+  .pub-hero-btns { flex-direction: column !important; align-items: stretch !important; }
+  .pub-hero-btns button { width: 100% !important; justify-content: center !important; }
+}
+
+/* Developer card — full width on mobile */
+@media (max-width: 480px) {
+  div[style*="maxWidth: 340px"] { max-width: 100% !important; }
+}
+
+/* Feature grid — single col on small mobile */
+@media (max-width: 400px) {
+  div[style*="minmax(300px,1fr)"]  { grid-template-columns: 1fr !important; }
+  div[style*="minmax(170px,1fr)"]  { grid-template-columns: repeat(2,1fr) !important; }
+  div[style*="minmax(260px,1fr)"]  { grid-template-columns: 1fr !important; }
 }

@@ -3,6 +3,9 @@ import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import Home from './pages/Home';
+import About from './pages/About';
+import Contact from './pages/Contact';
 import Dashboard from './pages/Dashboard';
 import Announcements from './pages/Announcements';
 import SendAnnouncement from './pages/SendAnnouncement';
@@ -34,7 +37,11 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      {/* ── Public pages ── */}
+      <Route path="/"        element={<Home />} />
+      <Route path="/about"   element={<About />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/login"   element={<Login />} />
 
       <Route
         element={
@@ -87,8 +94,7 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
       </Route>
 
-      <Route path="/" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />} />
-      <Route path="*" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />} />
+      <Route path="*" element={<Navigate to={isAuthenticated ? '/dashboard' : '/'} replace />} />
     </Routes>
   );
 }

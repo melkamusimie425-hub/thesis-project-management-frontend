@@ -66,7 +66,7 @@ export default function Dashboard() {
           </div>
           <div>
             <h2 style={{ fontSize: 22, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: -.3 }}>
-              Welcome back, {user.first_name} 👋
+              Welcome back, {user.first_name}
             </h2>
             <p style={{ color: 'rgba(226,240,232,.5)', fontSize: 13, margin: '2px 0 0' }}>
               Signed in as <span style={{ color: '#c8a800', fontWeight: 700 }}>{ROLE_GREET[user.role] || user.role}</span>
@@ -100,7 +100,7 @@ export default function Dashboard() {
         {/* Announcements */}
         <div className="card">
           <div className="card-head">
-            <h3>📣 Recent Announcements</h3>
+            <h3>Recent Announcements</h3>
             <button className="btn btn-ghost btn-sm" onClick={() => navigate('/announcements')}>
               View all →
             </button>
@@ -137,7 +137,7 @@ export default function Dashboard() {
         {/* Quick actions */}
         <div className="card">
           <div className="card-head">
-            <h3>⚡ Quick Actions</h3>
+            <h3>Quick Actions</h3>
           </div>
           <div className="card-body">
             {actions.length === 0

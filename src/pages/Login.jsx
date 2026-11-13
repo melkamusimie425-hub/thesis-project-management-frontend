@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { useTheme } from '../context/ThemeContext';
+import PublicNav from '../components/PublicNav';
 import {
   Eye, EyeOff, Lock, Mail, ArrowRight, CheckCircle2, Shield,
-  Sparkles, Sun, Moon, Check, AlertCircle,
+  Sparkles, Sun, Moon, AlertCircle,
   GraduationCap, BookOpen, Users, BarChart3, Calendar, FileText,
 } from 'lucide-react';
 
-/* ── Role options ── */
 const ROLES = [
   { value: '',              label: '— Select your role —' },
   { value: 'Administrator', label: '⚙️  Administrator' },
@@ -25,146 +25,203 @@ const ROLES = [
 ];
 
 const FEATURES = [
-  { icon: FileText,     text: 'Title Submission & Approval' },
-  { icon: Users,        text: 'Automatic Advisor Assignment' },
-  { icon: Calendar,     text: 'Defense Scheduling' },
-  { icon: BookOpen,     text: 'Document Upload & Review' },
-  { icon: BarChart3,    text: 'Grade Management & Reports' },
+  { icon: FileText,      text: 'Title Submission & Approval' },
+  { icon: Users,         text: 'Automatic Advisor Assignment' },
+  { icon: Calendar,      text: 'Defense Scheduling' },
+  { icon: BookOpen,      text: 'Document Upload & Review' },
+  { icon: BarChart3,     text: 'Grade Management & Reports' },
   { icon: GraduationCap, text: 'Thesis & Project Repository' },
 ];
 
+/* Draggable + self-floating OTPMS headline */
+function DraggableTitle({ accentHue }) {
+  const ref      = useRef(null);
+  const drag     = useRef({ active: false, ox: 0, oy: 0 });
+  const anim     = useRef(null);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const manualPos = useRef({ x: 0, y: 0 });
+
+  /* Autonomous float — slow sine/cosine drift */
+  useEffect(() => {
+    let t = 0;
+    let frameId;
+    function tick() {
+      if (!drag.current.active) {
+        t += 0.008;
+        const fx = Math.sin(t * 0.9) * 10 + Math.sin(t * 1.4) * 5;
+        const fy = Math.cos(t * 0.7) * 8  + Math.cos(t * 1.2) * 4;
+        setPos({ x: manualPos.current.x + fx, y: manualPos.current.y + fy });
+      }
+      frameId = requestAnimationFrame(tick);
+    }
+    frameId = requestAnimationFrame(tick);
+    anim.current = frameId;
+    return () => cancelAnimationFrame(frameId);
+  }, []);
+
+  /* Drag handlers */
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    function onDown(e) {
+      const src = e.touches ? e.touches[0] : e;
+      drag.current = { active: true, ox: src.clientX - manualPos.current.x, oy: src.clientY - manualPos.current.y };
+      el.style.cursor = 'grabbing';
+    }
+    function onMove(e) {
+      if (!drag.current.active) return;
+      const src = e.touches ? e.touches[0] : e;
+      manualPos.current = { x: src.clientX - drag.current.ox, y: src.clientY - drag.current.oy };
+    }
+    function onUp() {
+      drag.current.active = false;
+      el.style.cursor = 'grab';
+    }
+    el.addEventListener('mousedown',  onDown);
+    el.addEventListener('touchstart', onDown, { passive: true });
+    window.addEventListener('mousemove',  onMove);
+    window.addEventListener('touchmove',  onMove, { passive: true });
+    window.addEventListener('mouseup',    onUp);
+    window.addEventListener('touchend',   onUp);
+    return () => {
+      el.removeEventListener('mousedown',  onDown);
+      el.removeEventListener('touchstart', onDown);
+      window.removeEventListener('mousemove',  onMove);
+      window.removeEventListener('touchmove',  onMove);
+      window.removeEventListener('mouseup',    onUp);
+      window.removeEventListener('touchend',   onUp);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        transform: `translate(${pos.x}px, ${pos.y}px)`,
+        cursor: 'grab',
+        userSelect: 'none',
+        display: 'inline-block',
+        marginBottom: 6,
+        touchAction: 'none',
+        willChange: 'transform',
+      }}
+      title="Drag me!"
+    >
+      {'Welcome to OTPMS'.split('').map((ch, i) => (
+        <span
+          key={i}
+          style={{
+            display: 'inline-block',
+            fontSize: ch === ' ' ? 18 : 36,
+            fontWeight: 900,
+            letterSpacing: ch === ' ' ? 6 : -1,
+            lineHeight: 1.15,
+            animation: `otpmsLetter .7s cubic-bezier(.22,1,.36,1) both`,
+            animationDelay: `${i * 0.055}s`,
+            background: `linear-gradient(135deg,
+              #fff 0%,
+              hsl(${accentHue},85%,75%) 40%,
+              hsl(${accentHue + 40},80%,65%) 70%,
+              hsl(45,90%,70%) 100%)`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            filter: `drop-shadow(0 2px 14px hsla(${accentHue},80%,60%,.6))`,
+            transition: 'transform .15s',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px) scale(1.1)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = ''; }}
+        >
+          {ch === ' ' ? '\u00A0' : ch}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function Login() {
   const { login, logout } = useAuth();
-  const navigate   = useNavigate();
-  const toast      = useToast();
+  const navigate  = useNavigate();
+  const toast     = useToast();
   const { accentHue: globalHue, setAccentHue: setGlobalHue, dark: globalDark, setDark: setGlobalDark } = useTheme();
 
-  /* Auth state */
-  const [email,       setEmail]       = useState('');
-  const [password,    setPassword]    = useState('');
-  const [role,        setRole]        = useState('');
-  const [showPwd,     setShowPwd]     = useState(false);
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState('');
+  const [email,        setEmail]       = useState('');
+  const [password,     setPassword]    = useState('');
+  const [role,         setRole]        = useState('');
+  const [showPwd,      setShowPwd]     = useState(false);
+  const [loading,      setLoading]     = useState(false);
+  const [error,        setError]       = useState('');
+  const [dark,         setDarkLocal]   = useState(globalDark);
+  const [accentHue,    setAccentLocal] = useState(globalHue);
+  const [notification, setNotif]       = useState(null);
+  const [mousePos,     setMousePos]    = useState({ x: 0, y: 0 });
 
-  /* UI state — synced with global theme */
-  const [dark,        setDarkLocal]   = useState(globalDark);
-  const [accentHue,   setAccentLocal] = useState(globalHue);
-  const [notification, setNotif]      = useState(null);
-  const [mousePos,    setMousePos]    = useState({ x: 0, y: 0 });
-
-  function setDark(v)      { setDarkLocal(v); setGlobalDark(v); }
+  function setDark(v)      { setDarkLocal(v);  setGlobalDark(v); }
   function setAccentHue(v) { setAccentLocal(v); setGlobalHue(v); }
 
-  /* Canvas ref */
   const canvasRef = useRef(null);
 
-  /* Notification helper */
   function notify(msg, type = 'info') {
     setNotif({ msg, type });
-    setTimeout(() => setNotif(null), 4000);
+    setTimeout(() => setNotif(null), 4500);
   }
 
-  /* Login submit */
   async function handleSubmit(e) {
     e.preventDefault();
     if (!email)    { notify('Please enter your email address.', 'error'); return; }
     if (!password) { notify('Please enter your password.', 'error'); return; }
     if (!role)     { notify('Please select your role to continue.', 'error'); return; }
-    setError('');
-    setLoading(true);
+    setError(''); setLoading(true);
     try {
       const user = await login(email, password);
-
-      // ── Role verification ──────────────────────────────────────────
-      // The selected role must match the actual role stored in the database.
-      // This prevents a student from entering admin credentials and selecting
-      // "Administrator" to gain elevated access.
       if (user.role !== role) {
-        // Immediately revoke the issued token so it can't be reused.
         logout();
-        const selectedLabel = ROLES.find((r) => r.value === role)?.label.replace(/^[^\s]+\s+/, '') || role;
-        const actualLabel   = ROLES.find((r) => r.value === user.role)?.label.replace(/^[^\s]+\s+/, '') || user.role;
-        const msg = `Role mismatch. Your account is registered as "${actualLabel}", not "${selectedLabel}". Please select the correct role.`;
-        setError(msg);
-        notify(msg, 'error');
-        setLoading(false);
-        return;
+        const selLabel = ROLES.find((r) => r.value === role)?.label.replace(/^[^\s]+\s+/, '') || role;
+        const actLabel = ROLES.find((r) => r.value === user.role)?.label.replace(/^[^\s]+\s+/, '') || user.role;
+        const msg = `Role mismatch. Your account is registered as "${actLabel}", not "${selLabel}". Please select the correct role.`;
+        setError(msg); notify(msg, 'error'); setLoading(false); return;
       }
-      // ──────────────────────────────────────────────────────────────
-
       toast.success(`Welcome back, ${user.first_name}!`);
       navigate('/dashboard');
     } catch (err) {
-      const msg = err.response?.data?.message
-        || err.response?.data?.errors?.email?.[0]
-        || 'Login failed. Please check your credentials.';
-      setError(msg);
-      notify(msg, 'error');
-    } finally {
-      setLoading(false);
-    }
+      const msg = err.response?.data?.message || err.response?.data?.errors?.email?.[0] || 'Login failed. Please check your credentials.';
+      setError(msg); notify(msg, 'error');
+    } finally { setLoading(false); }
   }
 
-  /* ── Interactive canvas ── */
+  /* Particle canvas — lines only, no visible dot circles */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx    = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
     let raf;
-
-    const resize = () => {
-      const p = canvas.parentElement;
-      if (!p) return;
-      canvas.width  = p.offsetWidth;
-      canvas.height = p.offsetHeight;
-    };
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     resize();
     window.addEventListener('resize', resize);
-
-    const N     = 40;
+    const N = 55;
     const nodes = Array.from({ length: N }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.7,
-      vy: (Math.random() - 0.5) * 0.7,
-      r:  Math.random() * 2.5 + 1,
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      vx: (Math.random() - .5) * .4,
+      vy: (Math.random() - .5) * .4,
     }));
-
     function draw() {
-      const w = canvas.width, h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
-
-      /* grid */
-      ctx.strokeStyle = dark ? 'rgba(255,255,255,.03)' : 'rgba(0,0,0,.04)';
-      ctx.lineWidth = 1;
-      for (let x = 0; x < w; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-      for (let y = 0; y < h; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
-
-      /* nodes */
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       nodes.forEach((n, i) => {
         n.x += n.vx; n.y += n.vy;
-        if (n.x < 0 || n.x > w) n.vx *= -1;
-        if (n.y < 0 || n.y > h) n.vy *= -1;
+        if (n.x < 0 || n.x > canvas.width)  n.vx *= -1;
+        if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
         const dx = mousePos.x - n.x, dy = mousePos.y - n.y;
-        const d  = Math.sqrt(dx*dx + dy*dy);
-        if (d < 150) { n.x += dx * 0.012; n.y += dy * 0.012; }
-
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
-        ctx.fillStyle = `hsl(${accentHue},80%,${dark?'65%':'45%'})`;
-        ctx.fill();
-
-        for (let j = i+1; j < nodes.length; j++) {
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < 180) { n.x += dx * .008; n.y += dy * .008; }
+        /* draw only connection lines — no dot circles */
+        for (let j = i + 1; j < nodes.length; j++) {
           const o = nodes[j];
-          const dd = Math.hypot(o.x-n.x, o.y-n.y);
-          if (dd < 120) {
-            ctx.beginPath();
-            ctx.moveTo(n.x, n.y);
-            ctx.lineTo(o.x, o.y);
-            ctx.strokeStyle = `hsla(${accentHue},70%,60%,${(1-dd/120)*.8})`;
-            ctx.lineWidth = 0.6;
-            ctx.stroke();
+          const dd = Math.hypot(o.x - n.x, o.y - n.y);
+          if (dd < 130) {
+            ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(o.x, o.y);
+            ctx.strokeStyle = `hsla(${accentHue},70%,65%,${(1 - dd / 130) * .35})`;
+            ctx.lineWidth = .5; ctx.stroke();
           }
         }
       });
@@ -174,394 +231,376 @@ export default function Login() {
     return () => { window.removeEventListener('resize', resize); cancelAnimationFrame(raf); };
   }, [accentHue, dark, mousePos]);
 
-  /* CSS custom properties */
-  const cssVars = {
-    '--ah':     accentHue,
-    '--acc':    `hsl(${accentHue},80%,58%)`,
-    '--acc-dk': `hsl(${accentHue},70%,40%)`,
-    '--acc-lt': `hsl(${accentHue},80%,65%)`,
+  const labelStyle = { fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8,
+    color: dark ? 'rgba(255,255,255,.6)' : 'rgba(13,46,21,.65)' };
+
+  const inp = {
+    width: '100%', padding: '12px 14px 12px 42px',
+    border: `1.5px solid ${dark ? 'rgba(255,255,255,.15)' : 'rgba(26,92,42,.2)'}`,
+    borderRadius: 12, fontSize: 14, fontFamily: 'inherit',
+    color: dark ? '#fff' : '#0d2e15',
+    background: dark ? 'rgba(255,255,255,.07)' : 'rgba(255,255,255,.65)',
+    outline: 'none', boxSizing: 'border-box', transition: 'all .2s',
   };
 
   return (
     <div
+      onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
       style={{
-        ...cssVars,
-        minHeight: '100vh', width: '100%', display: 'flex',
-        alignItems: 'center', justifyContent: 'center',
-        padding: '12px',
-        background: dark
-          ? 'linear-gradient(135deg,#020c06 0%,#041a0b 40%,#071f0e 70%,#030e06 100%)'
-          : 'linear-gradient(135deg,#e8f4ec 0%,#f0f9f2 50%,#e2f0e8 100%)',
+        minHeight: '100vh', width: '100%', position: 'relative',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: "'Segoe UI',system-ui,-apple-system,sans-serif",
-        transition: 'background .5s',
-        position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Glow blobs */}
-      <div style={{ position:'fixed', inset:0, pointerEvents:'none', overflow:'hidden', zIndex:0 }}>
-        <div style={{ position:'absolute', top:'-20%', left:'-10%', width:'50vw', height:'50vw', borderRadius:'50%', filter:'blur(140px)', opacity:.3, background:`radial-gradient(circle,hsl(${accentHue},80%,55%),transparent 70%)` }} />
-        <div style={{ position:'absolute', bottom:'-20%', right:'-10%', width:'55vw', height:'55vw', borderRadius:'50%', filter:'blur(160px)', opacity:.2, background:`radial-gradient(circle,hsl(${accentHue+60},75%,50%),transparent 70%)` }} />
-      </div>
-
-      {/* Floating controls top-right */}
+      {/* PublicNav — Home / About / Contact / Login links */}
+      <PublicNav />
+      {/* Background — dark/light */}
       <div style={{
-        position:'fixed', top:16, right:16, zIndex:50,
-        display:'flex', alignItems:'center', gap:10,
-        padding:'8px 14px',
-        background: dark ? 'rgba(15,30,20,.6)' : 'rgba(255,255,255,.6)',
-        backdropFilter:'blur(16px)', borderRadius:16,
-        border: dark ? '1px solid rgba(255,255,255,.1)' : '1px solid rgba(0,0,0,.08)',
-        boxShadow:'0 8px 32px rgba(0,0,0,.2)',
-      }}>
-        <Sparkles size={14} style={{ color:`hsl(${accentHue},80%,60%)`, animation:'pulse 2s infinite' }} />
-        <input
-          type="range" min="0" max="360" value={accentHue}
-          onChange={(e) => setAccentHue(Number(e.target.value))}
-          title="Change accent color"
-          style={{ width:90, height:5, cursor:'pointer', borderRadius:4, accentColor:`hsl(${accentHue},80%,58%)` }}
-        />
-        <div style={{ width:1, height:18, background: dark?'rgba(255,255,255,.2)':'rgba(0,0,0,.15)' }} />
-        <button
-          onClick={() => setDark(!dark)}
-          style={{ background:'none', border:'none', cursor:'pointer', padding:4, display:'flex', alignItems:'center', color: dark?'#fbbf24':'#4f46e5' }}
-        >
-          {dark ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
+        position: 'fixed', inset: 0, zIndex: 0,
+        transition: 'background .5s',
+        background: dark
+          ? 'linear-gradient(135deg,#020c06 0%,#041a0b 40%,#071f0e 70%,#030e06 100%)'
+          : 'linear-gradient(135deg,#e8f5ec 0%,#f4fbf6 40%,#eaf6ef 70%,#e8f5ec 100%)',
+      }} />
+
+      {/* Aurora blobs */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '50vw', height: '50vw', borderRadius: '50%', filter: 'blur(140px)', opacity: dark ? .28 : .18, background: `radial-gradient(circle,hsl(${accentHue},80%,55%),transparent 70%)` }} />
+        <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '55vw', height: '55vw', borderRadius: '50%', filter: 'blur(160px)', opacity: dark ? .2 : .14, background: `radial-gradient(circle,hsl(${accentHue + 50},70%,50%),transparent 70%)` }} />
       </div>
 
-      {/* Toast notification */}
+      {/* Particle canvas */}
+      <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, zIndex: 2, pointerEvents: 'none', opacity: dark ? .7 : .4 }} />
+
+      {/* Theme controls are in PublicNav above */}
+
+      {/* ── Toast ── */}
       {notification && (
         <div style={{
-          position:'fixed', top:16, left:'50%', transform:'translateX(-50%)',
-          zIndex:100, display:'flex', alignItems:'center', gap:10,
-          padding:'12px 20px', borderRadius:16,
-          background: dark?'rgba(10,25,15,.92)':'rgba(255,255,255,.95)',
-          border: dark?'1px solid rgba(255,255,255,.1)':'1px solid rgba(0,0,0,.08)',
-          backdropFilter:'blur(20px)', boxShadow:'0 20px 60px rgba(0,0,0,.3)',
-          fontSize:13, fontWeight:600, color: dark?'#f1f5f9':'#1e293b',
-          animation:'slideDown .3s ease',
+          position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 100, display: 'flex', alignItems: 'center', gap: 10,
+          padding: '12px 20px', borderRadius: 16,
+          background: 'rgba(8,20,12,.92)', border: '1px solid rgba(255,255,255,.12)',
+          backdropFilter: 'blur(20px)', boxShadow: '0 20px 60px rgba(0,0,0,.4)',
+          fontSize: 13, fontWeight: 600, color: '#f1f5f9',
+          animation: 'slideDown .3s ease', whiteSpace: 'nowrap',
         }}>
           {notification.type === 'error'
-            ? <AlertCircle size={16} style={{ color:'#f43f5e', flexShrink:0 }} />
-            : <CheckCircle2 size={16} style={{ color:`hsl(${accentHue},70%,52%)`, flexShrink:0 }} />}
+            ? <AlertCircle size={16} style={{ color: '#f43f5e', flexShrink: 0 }} />
+            : <CheckCircle2 size={16} style={{ color: `hsl(${accentHue},70%,55%)`, flexShrink: 0 }} />}
           {notification.msg}
         </div>
       )}
 
-      {/* Main card */}
+      {/* ── Main two-column card ── */}
       <div style={{
-        position:'relative', zIndex:10,
-        width:'100%', maxWidth:1100,
-        minHeight:680, borderRadius:28, overflow:'hidden',
-        display:'grid', gridTemplateColumns:'1fr 1fr',
-        background: dark ? 'rgba(5,15,8,.7)' : 'rgba(255,255,255,.75)',
-        backdropFilter:'blur(24px)',
-        border: dark?'1px solid rgba(255,255,255,.08)':'1px solid rgba(26,92,42,.12)',
+        position: 'relative', zIndex: 10,
+        width: '100%', maxWidth: 1120,
+        margin: '16px 16px 24px',
+        borderRadius: 28, overflow: 'hidden',
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        background: dark ? 'rgba(4,14,8,.62)' : 'rgba(255,255,255,.72)',
+        backdropFilter: 'blur(28px)',
+        border: dark ? '1px solid rgba(255,255,255,.1)' : '1px solid rgba(26,92,42,.15)',
         boxShadow: dark
-          ? `0 32px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.05), 0 0 120px -20px hsl(${accentHue},60%,30%)`
-          : '0 24px 60px rgba(26,92,42,.15)',
+          ? `0 40px 100px rgba(0,0,0,.55), 0 0 160px -30px hsl(${accentHue},60%,30%)`
+          : `0 24px 60px rgba(26,92,42,.18)`,
+        transition: 'all .4s',
       }}>
 
-        {/* ── LEFT: Canvas + WSU Branding ── */}
-        <div
-          onMouseMove={(e) => {
-            const r = e.currentTarget.getBoundingClientRect();
-            setMousePos({ x: e.clientX - r.left, y: e.clientY - r.top });
-          }}
-          style={{
-            position:'relative', overflow:'hidden',
-            display:'flex', flexDirection:'column', justifyContent:'space-between',
-            padding:'40px 36px',
-            borderRight: dark?'1px solid rgba(255,255,255,.06)':'1px solid rgba(26,92,42,.1)',
-            background: dark
-              ? `linear-gradient(150deg,rgba(5,20,10,.95),rgba(10,35,18,.9),rgba(8,28,14,.95))`
-              : `linear-gradient(150deg,rgba(240,249,244,.97),rgba(232,244,238,.95))`,
-          }}
-        >
-          <canvas ref={canvasRef} style={{ position:'absolute', inset:0, pointerEvents:'none', opacity:.9 }} />
-
-          {/* Hexagon mesh overlay */}
+        {/* LEFT — Branding panel */}
+        <div style={{
+          position: 'relative', overflow: 'hidden',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '48px 36px',
+          borderRight: dark ? '1px solid rgba(255,255,255,.07)' : '1px solid rgba(26,92,42,.12)',
+          background: dark
+            ? 'rgba(2,10,5,.45)'
+            : 'linear-gradient(160deg,rgba(232,248,238,.95),rgba(248,255,251,.9))',
+          minHeight: 680,
+          textAlign: 'center',
+          transition: 'background .4s',
+        }}>
+          {/* Rotating accent ring behind logo */}
           <div style={{
-            position:'absolute', inset:0, opacity:.05,
-            backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50V16L28 0l28 16v34L28 66zM28 100L0 84V66l28 16 28-16v18L28 100z' fill='none' stroke='%23c8a800' stroke-width='0.8'/%3E%3C/svg%3E")`,
-            pointerEvents:'none',
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%,-50%)',
+            width: 320, height: 320, borderRadius: '50%',
+            border: `2px solid hsla(${accentHue},70%,55%,.15)`,
+            animation: 'rotateSlow 20s linear infinite',
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%,-50%)',
+            width: 380, height: 380, borderRadius: '50%',
+            border: `1px solid hsla(${accentHue + 60},60%,55%,.08)`,
+            animation: 'rotateSlow 30s linear infinite reverse',
+            pointerEvents: 'none',
           }} />
 
-          {/* Rotating orbs */}
-          <div style={{ position:'absolute', top:'-15%', right:'-15%', width:320, height:320, borderRadius:'50%', background:`radial-gradient(circle,hsla(${accentHue},70%,55%,.22),transparent 70%)`, animation:'rotateSlow 25s linear infinite', pointerEvents:'none' }} />
-          <div style={{ position:'absolute', bottom:'-15%', left:'-15%', width:280, height:280, borderRadius:'50%', background:`radial-gradient(circle,hsla(${accentHue+60},65%,50%,.15),transparent 65%)`, animation:'rotateSlow 20s linear infinite reverse', pointerEvents:'none' }} />
-
-          {/* Top: Logo + seal */}
-          <div style={{ position:'relative', zIndex:2, display:'flex', alignItems:'center', gap:14 }}>
-            <div style={{
-              width:58, height:58, borderRadius:'50%', overflow:'hidden', flexShrink:0,
-              border:`3px solid hsl(${accentHue},70%,55%)`,
-              boxShadow:`0 0 0 4px hsla(${accentHue},70%,55%,.2), 0 8px 24px rgba(0,0,0,.3)`,
-              background:'#fff',
-            }}>
-              <img src="/wsu-logo.png" alt="WSU" style={{ width:'100%', height:'100%', objectFit:'cover' }}
-                onError={(e) => { e.target.parentElement.innerHTML = `<div style="width:100%;height:100%;background:hsl(${accentHue},60%,40%);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px">WSU</div>`; }} />
-            </div>
-            <div>
-              <h2 style={{ color:dark?'#fff':'#0d2e15', fontWeight:800, fontSize:15, margin:0, letterSpacing:.3 }}>
-                Wolaita Sodo University
-              </h2>
-              <p style={{ color:`hsl(${accentHue},70%,${dark?'65%':'45%'})`, fontSize:11, margin:'2px 0 0', fontWeight:600, letterSpacing:1.5, textTransform:'uppercase' }}>
-                EST. 2018 E.C
-              </p>
-            </div>
+          {/* ── BIG WSU Logo ── */}
+          <div style={{
+            width: 180, height: 180, borderRadius: '50%', overflow: 'hidden',
+            border: `4px solid hsl(${accentHue},65%,55%)`,
+            boxShadow: `0 0 0 8px hsla(${accentHue},65%,50%,.15), 0 16px 48px rgba(0,0,0,.5), 0 0 60px hsla(${accentHue},70%,50%,.2)`,
+            background: '#fff',
+            flexShrink: 0,
+            animation: 'logoIn 1s cubic-bezier(.22,1,.36,1) both',
+            animationDelay: '.1s',
+            marginBottom: 28,
+          }}>
+            <img
+              src="/wsu-logo.png"
+              alt="Wolaita Sodo University"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.parentElement.innerHTML = '<span style="font-weight:900;font-size:28px;color:#1a5c2a;display:flex;align-items:center;justify-content:center;height:100%">WSU</span>';
+              }}
+            />
           </div>
 
-          {/* Middle: System title + features */}
-          <div style={{ position:'relative', zIndex:2, margin:'auto 0' }}>
-            {/* Live badge */}
-            <div style={{
-              display:'inline-flex', alignItems:'center', gap:7,
-              padding:'5px 14px', borderRadius:999, marginBottom:18, fontSize:11,
-              fontWeight:700, letterSpacing:1, textTransform:'uppercase',
-              background: dark?'rgba(255,255,255,.07)':'rgba(26,92,42,.08)',
-              border:`1px solid hsla(${accentHue},60%,55%,.3)`,
-              backdropFilter:'blur(8px)', color:dark?'rgba(255,255,255,.8)':dark?'rgba(0,0,0,.7)':'#1a5c2a',
-            }}>
-              <span style={{ width:7, height:7, borderRadius:'50%', background:`hsl(${accentHue},80%,60%)`, animation:'ping 1.5s infinite', display:'inline-block' }} />
-              <span style={{ width:7, height:7, borderRadius:'50%', background:`hsl(${accentHue},80%,60%)`, marginLeft:-16, display:'inline-block' }} />
-              Online Thesis &amp; Project Management System
-            </div>
+          {/* University name */}
+          <h2 style={{
+            color: dark ? '#fff' : '#0d2e15', fontWeight: 900, fontSize: 20, margin: '0 0 4px',
+            letterSpacing: .3, textShadow: dark ? '0 2px 12px rgba(0,0,0,.5)' : 'none',
+            animation: 'fadeUp .8s ease both', animationDelay: '.3s',
+          }}>
+            Wolaita Sodo University
+          </h2>
+          <p style={{
+            color: `hsl(${accentHue},75%,${dark?'70%':'42%'})`, fontSize: 12.5, margin: '0 0 28px',
+            fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase',
+            animation: 'fadeUp .8s ease both', animationDelay: '.4s',
+          }}>
+            School of Informatics
+          </p>
 
-            <h1 style={{
-              fontSize:30, fontWeight:900, lineHeight:1.2, margin:'0 0 10px',
-              background:`linear-gradient(135deg,${dark?'#fff':'#0d2e15'} 30%,hsl(${accentHue},75%,${dark?'65%':'45%'}) 100%)`,
-              WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
-              backgroundClip:'text',
-            }}>
-              School of<br />Information<br />Science
-            </h1>
-            <p style={{ color:dark?'rgba(255,255,255,.55)':'rgba(13,46,21,.6)', fontSize:13, lineHeight:1.6, margin:'0 0 24px' }}>
-              ወላይታ ሶዶ ዩኒቨርሲቲ — Manage theses, industrial projects, advisors, defenses and grades all in one place.
-            </p>
+          {/* ── Draggable animated OTPMS title ── */}
+          <div style={{ animation: 'fadeUp .8s ease both', animationDelay: '.55s', marginBottom: 10 }}>
+            <DraggableTitle accentHue={accentHue} dark={dark} />
+          </div>
 
-            {/* Feature list */}
-            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-              {FEATURES.map(({ icon: Icon, text }) => (
-                <div key={text} style={{ display:'flex', alignItems:'center', gap:10, fontSize:12.5, color:dark?'rgba(255,255,255,.75)':'rgba(13,46,21,.75)', fontWeight:500 }}>
-                  <div style={{ width:24, height:24, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, background:`hsla(${accentHue},70%,55%,.15)` }}>
-                    <Icon size={13} style={{ color:`hsl(${accentHue},70%,${dark?'65%':'48%'})` }} />
-                  </div>
-                  {text}
+          <p style={{
+            fontSize: 11.5, color: dark ? 'rgba(255,255,255,.45)' : 'rgba(13,46,21,.55)', maxWidth: 260,
+            lineHeight: 1.65, margin: '0 0 28px',
+            animation: 'fadeUp .8s ease both', animationDelay: '.65s',
+          }}>
+            ወላይታ ሶዶ ዩኒቨርሲቲ — Manage theses, industrial projects, advisors, defenses and grades all in one place.
+          </p>
+
+          {/* Feature pills */}
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 9, width: '100%', maxWidth: 280,
+            animation: 'fadeUp .8s ease both', animationDelay: '.75s',
+          }}>
+            {FEATURES.map(({ icon: Icon, text }) => (
+              <div key={text} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '8px 14px', borderRadius: 10,
+                background: dark ? 'rgba(255,255,255,.05)' : 'rgba(26,92,42,.07)',
+                border: dark ? '1px solid rgba(255,255,255,.07)' : '1px solid rgba(26,92,42,.12)',
+                fontSize: 12.5, color: dark ? 'rgba(255,255,255,.75)' : 'rgba(13,46,21,.75)', fontWeight: 500,
+              }}>
+                <div style={{
+                  width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: `hsla(${accentHue},70%,55%,.18)`,
+                }}>
+                  <Icon size={13} style={{ color: `hsl(${accentHue},75%,${dark?'68%':'45%'})` }} />
                 </div>
-              ))}
-            </div>
+                {text}
+              </div>
+            ))}
           </div>
 
-          {/* Bottom bar */}
-          <div style={{ position:'relative', zIndex:2, display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:18, borderTop:`1px solid ${dark?'rgba(255,255,255,.06)':'rgba(26,92,42,.1)'}`, fontSize:11, color:dark?'rgba(255,255,255,.35)':'rgba(13,46,21,.4)' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-              <Shield size={13} style={{ color:'#10b981' }} />
-              <span>Secured Portal</span>
-            </div>
+          {/* Footer */}
+          <div style={{
+            position: 'absolute', bottom: 18, left: 0, right: 0,
+            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6,
+            fontSize: 10.5, color: dark ? 'rgba(255,255,255,.25)' : 'rgba(13,46,21,.35)',
+          }}>
+            <Shield size={11} style={{ color: '#10b981' }} />
+            <span>Secured Portal</span>
+            <span style={{ opacity: .4 }}>·</span>
             <span>© {new Date().getFullYear()} Melkamu Sime · WSU · SIS</span>
           </div>
         </div>
 
-        {/* ── RIGHT: Auth Form ── */}
+        {/* RIGHT — Login form (centered) */}
         <div style={{
-          display:'flex', flexDirection:'column', justifyContent:'space-between',
-          padding:'36px 40px',
-          background: dark?'rgba(5,15,8,.5)':'rgba(255,255,255,.5)',
-          backdropFilter:'blur(20px)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          padding: '48px 44px',
+          background: dark ? 'rgba(4,14,8,.35)' : 'rgba(255,255,255,.45)',
+          transition: 'background .4s',
         }}>
-          {/* Top section */}
-          <div>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', marginBottom:24 }}>
-              <div style={{
-                display:'flex', padding:4, borderRadius:14,
-                background: dark?'rgba(255,255,255,.06)':'rgba(26,92,42,.07)',
-                border: dark?'1px solid rgba(255,255,255,.08)':'1px solid rgba(26,92,42,.1)',
-                gap:2,
-              }}>
-                <span style={{ padding:'7px 16px', borderRadius:11, fontSize:12, fontWeight:700, background:`hsl(${accentHue},65%,${dark?'35%':'45%'})`, color:'#fff' }}>Sign In</span>
-                <span style={{ padding:'7px 16px', borderRadius:11, fontSize:12, fontWeight:600, color:dark?'rgba(255,255,255,.45)':'rgba(13,46,21,.45)' }}>OTPMS v2.0</span>
-              </div>
-            </div>
+          <div style={{ width: '100%', maxWidth: 400 }}>
 
             {/* Title */}
-            <div style={{ marginBottom:28 }}>
-              <h2 style={{ fontSize:28, fontWeight:900, margin:'0 0 6px', color:dark?'#fff':'#0d2e15', letterSpacing:-.5 }}>
-                Welcome Back 👋
+            <div style={{ textAlign: 'center', marginBottom: 32 }}>
+              <h2 style={{ fontSize: 30, fontWeight: 900, margin: '0 0 8px', letterSpacing: -.5 }}>
+                {'Login'.split('').map((ch, i) => (
+                  <span key={i} style={{
+                    display: 'inline-block',
+                    animation: 'otpmsLetter .6s cubic-bezier(.22,1,.36,1) both',
+                    animationDelay: `${i * 0.08}s`,
+                    color: dark ? '#fff' : '#0d2e15',
+                    textShadow: dark
+                      ? `0 0 20px hsla(${accentHue},80%,65%,.6)`
+                      : `0 0 16px hsla(${accentHue},70%,40%,.3)`,
+                  }}>{ch}</span>
+                ))}
               </h2>
-              <p style={{ fontSize:13, color:dark?'rgba(255,255,255,.45)':'rgba(13,46,21,.5)', margin:0 }}>
-                Enter your university email and password to access your account.
+              <p style={{ fontSize: 13, color: dark ? 'rgba(255,255,255,.4)' : 'rgba(13,46,21,.5)', margin: 0 }}>
+                Enter your university credentials to access your account.
               </p>
             </div>
 
-            {/* Error */}
+            {/* Error banner */}
             {error && (
-              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px', borderRadius:12, marginBottom:18, fontSize:13, fontWeight:500, background:'rgba(244,63,94,.1)', border:'1px solid rgba(244,63,94,.25)', color:'#f43f5e', borderLeft:'4px solid #f43f5e' }}>
-                <AlertCircle size={15} style={{ flexShrink:0 }} /> {error}
+              <div style={{
+                display: 'flex', alignItems: 'flex-start', gap: 10,
+                padding: '11px 14px', borderRadius: 12, marginBottom: 20,
+                fontSize: 13, fontWeight: 500,
+                background: 'rgba(244,63,94,.12)', border: '1px solid rgba(244,63,94,.3)',
+                color: '#f43f5e', borderLeft: '4px solid #f43f5e',
+              }}>
+                <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} /> {error}
               </div>
             )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+
               {/* Email */}
-              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                <label style={{ fontSize:12, fontWeight:700, color:dark?'rgba(255,255,255,.7)':'rgba(13,46,21,.7)', textTransform:'uppercase', letterSpacing:.8 }}>
-                  Email Address
-                </label>
-                <div style={{ position:'relative' }}>
-                  <Mail size={15} style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:'rgba(148,163,184,.7)', pointerEvents:'none' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={labelStyle}>Email Address</label>
+                <div style={{ position: 'relative' }}>
+                  <Mail size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: dark?'rgba(255,255,255,.3)':'rgba(13,46,21,.35)', pointerEvents: 'none' }} />
                   <input
                     type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                     placeholder="yourname@wsu.edu.et" required autoFocus
-                    style={{ width:'100%', padding:'12px 14px 12px 40px', border:`1.5px solid ${dark?'rgba(255,255,255,.1)':'rgba(26,92,42,.15)'}`, borderRadius:12, fontSize:14, fontFamily:'inherit', color:dark?'#fff':'#0d2e15', background:dark?'rgba(255,255,255,.05)':'rgba(255,255,255,.6)', outline:'none', boxSizing:'border-box', transition:'all .2s' }}
-                    onFocus={(e) => { e.target.style.borderColor = `hsl(${accentHue},70%,55%)`; e.target.style.boxShadow = `0 0 0 4px hsla(${accentHue},70%,55%,.15)`; }}
-                    onBlur={(e) => { e.target.style.borderColor = dark?'rgba(255,255,255,.1)':'rgba(26,92,42,.15)'; e.target.style.boxShadow = 'none'; }}
+                    style={inp}
+                    onFocus={(e) => { e.target.style.borderColor=`hsl(${accentHue},70%,55%)`; e.target.style.boxShadow=`0 0 0 4px hsla(${accentHue},70%,55%,.15)`; e.target.style.background=dark?'rgba(255,255,255,.1)':'rgba(255,255,255,.9)'; }}
+                    onBlur={(e)  => { e.target.style.borderColor=dark?'rgba(255,255,255,.15)':'rgba(26,92,42,.2)'; e.target.style.boxShadow='none'; e.target.style.background=dark?'rgba(255,255,255,.07)':'rgba(255,255,255,.65)'; }}
                   />
                 </div>
               </div>
 
               {/* Password */}
-              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                <label style={{ fontSize:12, fontWeight:700, color:dark?'rgba(255,255,255,.7)':'rgba(13,46,21,.7)', textTransform:'uppercase', letterSpacing:.8 }}>
-                  Password
-                </label>
-                <div style={{ position:'relative' }}>
-                  <Lock size={15} style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:'rgba(148,163,184,.7)', pointerEvents:'none' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={labelStyle}>Password</label>
+                <div style={{ position: 'relative' }}>
+                  <Lock size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: dark?'rgba(255,255,255,.3)':'rgba(13,46,21,.35)', pointerEvents: 'none' }} />
                   <input
                     type={showPwd ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••" required
-                    style={{ width:'100%', padding:'12px 42px 12px 40px', border:`1.5px solid ${dark?'rgba(255,255,255,.1)':'rgba(26,92,42,.15)'}`, borderRadius:12, fontSize:14, fontFamily:'inherit', color:dark?'#fff':'#0d2e15', background:dark?'rgba(255,255,255,.05)':'rgba(255,255,255,.6)', outline:'none', boxSizing:'border-box', transition:'all .2s' }}
-                    onFocus={(e) => { e.target.style.borderColor = `hsl(${accentHue},70%,55%)`; e.target.style.boxShadow = `0 0 0 4px hsla(${accentHue},70%,55%,.15)`; }}
-                    onBlur={(e) => { e.target.style.borderColor = dark?'rgba(255,255,255,.1)':'rgba(26,92,42,.15)'; e.target.style.boxShadow = 'none'; }}
+                    style={{ ...inp, padding: '12px 42px 12px 42px' }}
+                    onFocus={(e) => { e.target.style.borderColor=`hsl(${accentHue},70%,55%)`; e.target.style.boxShadow=`0 0 0 4px hsla(${accentHue},70%,55%,.15)`; e.target.style.background=dark?'rgba(255,255,255,.1)':'rgba(255,255,255,.9)'; }}
+                    onBlur={(e)  => { e.target.style.borderColor=dark?'rgba(255,255,255,.15)':'rgba(26,92,42,.2)'; e.target.style.boxShadow='none'; e.target.style.background=dark?'rgba(255,255,255,.07)':'rgba(255,255,255,.65)'; }}
                   />
                   <button type="button" onClick={() => setShowPwd(!showPwd)}
-                    style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'rgba(148,163,184,.7)', padding:0, display:'flex' }}>
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: dark?'rgba(255,255,255,.35)':'rgba(13,46,21,.4)', padding: 0, display: 'flex' }}>
                     {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
-              {/* Sign-in button */}
+              {/* Role selector */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={labelStyle}>Your Role</label>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    value={role} onChange={(e) => setRole(e.target.value)}
+                    style={{
+                      width: '100%', padding: '12px 42px 12px 16px',
+                      border: `1.5px solid ${dark?'rgba(255,255,255,.15)':'rgba(26,92,42,.2)'}`, borderRadius: 12,
+                      fontSize: 13.5, fontFamily: 'inherit', fontWeight: 600,
+                      color: role ? (dark?'#fff':'#0d2e15') : (dark?'rgba(255,255,255,.35)':'rgba(13,46,21,.4)'),
+                      background: dark?'rgba(255,255,255,.07)':'rgba(255,255,255,.65)',
+                      outline: 'none', cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none', transition: 'all .2s',
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor=`hsl(${accentHue},70%,55%)`; e.target.style.boxShadow=`0 0 0 4px hsla(${accentHue},70%,55%,.15)`; }}
+                    onBlur={(e)  => { e.target.style.borderColor=dark?'rgba(255,255,255,.15)':'rgba(26,92,42,.2)'; e.target.style.boxShadow='none'; }}
+                  >
+                    {ROLES.map((r) => (
+                      <option key={r.value} value={r.value} style={{ background: dark?'#041a0b':'#fff', color: dark?'#e2f0e8':'#0d2e15', fontWeight: 600 }}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: dark?'rgba(255,255,255,.4)':'rgba(13,46,21,.4)', fontSize: 12 }}>▼</div>
+                </div>
+                {role && (
+                  <p style={{ margin: 0, fontSize: 11.5, color: `hsl(${accentHue},70%,${dark?'65%':'42%'})`, fontWeight: 600, textAlign: 'center' }}>
+                    ✓ Logging in as <strong>{ROLES.find((r) => r.value === role)?.label.replace(/^[^\s]+\s+/, '')}</strong>
+                  </p>
+                )}
+              </div>
+
+              {/* Login button */}
               <button
                 type="submit" disabled={loading || !role}
                 style={{
-                  width:'100%', padding:'13px', border:'none', borderRadius:12,
+                  width: '100%', padding: '14px', border: 'none', borderRadius: 12,
                   background: !role
-                    ? 'rgba(255,255,255,.12)'
-                    : `linear-gradient(135deg,hsl(${accentHue},75%,48%),hsl(${accentHue},65%,35%))`,
-                  color: !role ? 'rgba(255,255,255,.3)' : '#fff',
-                  fontWeight:800, fontSize:15, fontFamily:'inherit',
+                    ? 'rgba(255,255,255,.1)'
+                    : `linear-gradient(135deg,hsl(${accentHue},75%,50%),hsl(${accentHue},65%,36%))`,
+                  color: !role ? 'rgba(255,255,255,.25)' : '#fff',
+                  fontWeight: 800, fontSize: 15.5, fontFamily: 'inherit',
                   cursor: loading || !role ? 'not-allowed' : 'pointer',
-                  display:'flex', alignItems:'center', justifyContent:'center', gap:10,
-                  boxShadow: !role ? 'none' : `0 8px 24px -4px hsla(${accentHue},70%,45%,.45)`,
-                  opacity: loading ? .75 : 1, marginTop:4,
-                  transition:'all .2s', position:'relative', overflow:'hidden',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  boxShadow: !role ? 'none' : `0 10px 28px -4px hsla(${accentHue},70%,45%,.5)`,
+                  opacity: loading ? .75 : 1, marginTop: 6,
+                  transition: 'all .2s',
                 }}
-                onMouseEnter={(e) => { if (!loading && role) { e.currentTarget.style.transform='translateY(-1px)'; e.currentTarget.style.boxShadow=`0 12px 32px -4px hsla(${accentHue},70%,45%,.55)`; }}}
-                onMouseLeave={(e) => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow = role ? `0 8px 24px -4px hsla(${accentHue},70%,45%,.45)` : 'none'; }}
+                onMouseEnter={(e) => { if (!loading && role) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 14px 36px -4px hsla(${accentHue},70%,45%,.6)`; } }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = role ? `0 10px 28px -4px hsla(${accentHue},70%,45%,.5)` : 'none'; }}
               >
-                {loading ? (
-                  <div style={{ width:20, height:20, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#fff', borderRadius:'50%', animation:'spin .7s linear infinite' }} />
-                ) : (
-                  <> <span>Sign In to OTPMS</span> <ArrowRight size={17} /> </>
-                )}
+                {loading
+                  ? <div style={{ width: 20, height: 20, border: '3px solid rgba(255,255,255,.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+                  : <><span>Login to OTPMS</span><ArrowRight size={17} /></>}
               </button>
             </form>
-          </div>
-
-          {/* ── Role selector + footer ── */}
-          <div style={{ marginTop: 20 }}>
-            {/* Divider */}
-            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-              <div style={{ flex:1, height:1, background:dark?'rgba(255,255,255,.08)':'rgba(26,92,42,.1)' }} />
-              <span style={{ fontSize:10, fontWeight:800, letterSpacing:1.5, textTransform:'uppercase', color:dark?'rgba(255,255,255,.3)':'rgba(13,46,21,.35)' }}>Your Role</span>
-              <div style={{ flex:1, height:1, background:dark?'rgba(255,255,255,.08)':'rgba(26,92,42,.1)' }} />
-            </div>
-
-            {/* Role dropdown */}
-            <div style={{ position:'relative' }}>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                style={{
-                  width:'100%',
-                  padding:'12px 42px 12px 16px',
-                  border:`1.5px solid ${dark?'rgba(255,255,255,.1)':'rgba(26,92,42,.15)'}`,
-                  borderRadius:12,
-                  fontSize:13.5,
-                  fontFamily:'inherit',
-                  fontWeight:600,
-                  color: role
-                    ? (dark?'#fff':'#0d2e15')
-                    : (dark?'rgba(255,255,255,.35)':'rgba(13,46,21,.35)'),
-                  background:dark
-                    ? 'rgba(255,255,255,.05)'
-                    : 'rgba(255,255,255,.6)',
-                  outline:'none',
-                  cursor:'pointer',
-                  appearance:'none',
-                  WebkitAppearance:'none',
-                  transition:'all .2s',
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = `hsl(${accentHue},70%,55%)`;
-                  e.target.style.boxShadow   = `0 0 0 4px hsla(${accentHue},70%,55%,.15)`;
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = dark?'rgba(255,255,255,.1)':'rgba(26,92,42,.15)';
-                  e.target.style.boxShadow   = 'none';
-                }}
-              >
-                {ROLES.map((r) => (
-                  <option
-                    key={r.value}
-                    value={r.value}
-                    style={{ background:'#041a0b', color:'#e2f0e8', fontWeight:600 }}
-                  >
-                    {r.label}
-                  </option>
-                ))}
-              </select>
-              {/* Chevron icon */}
-              <div style={{
-                position:'absolute', right:14, top:'50%', transform:'translateY(-50%)',
-                pointerEvents:'none',
-                color:dark?'rgba(255,255,255,.4)':'rgba(13,46,21,.4)',
-                fontSize:12,
-              }}>▼</div>
-            </div>
-
-            {role && (
-              <p style={{ marginTop:8, fontSize:11.5, color:`hsl(${accentHue},65%,${dark?'60%':'48%'})`, fontWeight:600, textAlign:'center' }}>
-                ✓ Signing in as <strong>{ROLES.find(r => r.value === role)?.label.replace(/^[^\s]+\s+/,'')}</strong>
-              </p>
-            )}
 
             {/* Footer */}
-            <div style={{ textAlign:'center', fontSize:11, color:dark?'rgba(255,255,255,.2)':'rgba(13,46,21,.3)', marginTop:18, display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
-              <div style={{ display:'flex', justifyContent:'center', gap:12 }}>
-                <span style={{ cursor:'pointer' }}>Privacy Policy</span>
+            <div style={{ textAlign: 'center', fontSize: 11, color: dark?'rgba(255,255,255,.18)':'rgba(13,46,21,.35)', marginTop: 28, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
+                <span style={{ cursor: 'pointer' }}>Privacy Policy</span>
                 <span>•</span>
-                <span style={{ cursor:'pointer' }}>Terms of Service</span>
-                <span>•</span>
-                <span style={{ cursor:'pointer' }}>System Status</span>
+                <span style={{ cursor: 'pointer' }}>Terms of Service</span>
               </div>
-              <div style={{ fontSize:10.5 }}>
-                © {new Date().getFullYear()} <strong style={{ color: dark?'rgba(200,168,0,.8)':'rgba(26,92,42,.8)' }}>Melkamu Sime</strong> · All Rights Reserved
+              <div style={{ fontSize: 10.5 }}>
+                © {new Date().getFullYear()} <strong style={{ color: dark?'rgba(200,168,0,.7)':'rgba(26,92,42,.7)' }}>Melkamu Sime</strong> · All Rights Reserved
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Keyframe animations injected */}
+      {/* ── Responsive: on small screens, stack vertically ── */}
       <style>{`
-        @keyframes spin       { to { transform: rotate(360deg); } }
-        @keyframes ping       { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:.4} }
-        @keyframes rotateSlow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @keyframes pulse      { 0%,100%{opacity:1} 50%{opacity:.5} }
-        @keyframes slideDown  { from{transform:translate(-50%,-20px);opacity:0} to{transform:translate(-50%,0);opacity:1} }
+        @keyframes spin          { to { transform: rotate(360deg); } }
+        @keyframes ping          { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:.4} }
+        @keyframes rotateSlow    { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes pulse         { 0%,100%{opacity:1} 50%{opacity:.5} }
+        @keyframes slideDown     { from{transform:translate(-50%,-20px);opacity:0} to{transform:translate(-50%,0);opacity:1} }
+        @keyframes logoIn        { 0%{opacity:0;transform:scale(.6) rotate(-8deg)} 60%{transform:scale(1.06) rotate(2deg)} 100%{opacity:1;transform:scale(1) rotate(0)} }
+        @keyframes fadeUp        { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes otpmsLetter   { 0%{opacity:0;transform:translateY(22px) scale(.8)} 60%{opacity:1;transform:translateY(-5px) scale(1.06)} 100%{opacity:1;transform:translateY(0) scale(1)} }
+
+        @media (max-width: 860px) {
+          /* Stack left panel above form on mobile */
+          div[style*="gridTemplateColumns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+          div[style*="border-right"] { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,.07) !important; min-height: auto !important; padding: 36px 24px !important; }
+        }
+        @media (max-width: 480px) {
+          div[style*="maxWidth: 1120px"] { margin: 12px 8px !important; border-radius: 20px !important; }
+        }
       `}</style>
     </div>
   );
