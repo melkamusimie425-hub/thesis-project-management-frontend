@@ -1,29 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import PublicNav from '../components/PublicNav';
 import {
-  FileText, Users, Calendar, BookOpen, BarChart3, GraduationCap,
   Shield, ArrowRight, Sparkles, Lock, Globe,
 } from 'lucide-react';
-
-const FEATURES = [
-  { icon: FileText,      title: 'Title Submission',    desc: 'Students submit up to 3 alternative titles for committee review and approval.' },
-  { icon: Users,         title: 'Advisor Assignment',  desc: 'Coordinators assign advisors to project groups and graduate students.' },
-  { icon: Calendar,      title: 'Defense Scheduling',  desc: 'Schedule oral defenses with examiners, date, time and location.' },
-  { icon: BookOpen,      title: 'Document Management', desc: 'Upload, review, and publish thesis documents securely in one place.' },
-  { icon: BarChart3,     title: 'Grade & Reports',     desc: 'Record assessment scores and compile final grades with one click.' },
-  { icon: GraduationCap, title: 'Public Repository',   desc: 'Completed approved works published for public academic access.' },
-];
-
-const ROLES = [
-  { emoji: '👨‍🎓', label: 'Students',       desc: 'Form groups, submit titles, track progress.' },
-  { emoji: '🧑‍🏫', label: 'Advisors',       desc: 'Guide students, review documents, record scores.' },
-  { emoji: '🎓',  label: 'Coordinators',   desc: 'Manage the full workflow end-to-end.' },
-  { emoji: '🏛️', label: 'Dept. Head',      desc: 'Monitor progress and generate reports.' },
-  { emoji: '📋',  label: 'Committees',      desc: 'Review proposals, titles and results.' },
-  { emoji: '📝',  label: 'Examiners',       desc: 'Evaluate defenses and submit scores.' },
-];
 
 const STATS = [
   { value: '6+',   label: 'User Roles' },
@@ -150,8 +131,6 @@ function HeroCanvas({ accentHue, dark }) {
 export default function Home() {
   const navigate            = useNavigate();
   const { accentHue, dark } = useTheme();
-  const [hoveredFeature, setHoveredFeature] = useState(null);
-
   const bg    = dark
     ? 'linear-gradient(135deg,#010a04 0%,#021208 40%,#030e06 100%)'
     : 'linear-gradient(135deg,#e4f5eb 0%,#f2fbf5 50%,#e8f7ee 100%)';
@@ -292,88 +271,6 @@ export default function Home() {
         }}>
           <span>Scroll</span>
           <div style={{ width: 1.5, height: 36, background: `linear-gradient(to bottom,${acc},transparent)`, animation: 'scrollPulse 1.8s ease-in-out infinite' }} />
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════
-          FEATURES — glass card grid
-      ══════════════════════════════════════ */}
-      <section style={{ padding: '90px 24px', maxWidth: 1140, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 54 }}>
-          <p style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: 2.5, textTransform: 'uppercase', color: accLt, marginBottom: 10 }}>Platform Capabilities</p>
-          <h2 style={{ fontSize: 'clamp(24px,3.5vw,38px)', fontWeight: 900, margin: '0 0 14px', letterSpacing: -1 }}>
-            One System, Complete Workflow
-          </h2>
-          <p style={{ color: muted, fontSize: 15, maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>
-            From the first title submission to the final published thesis — OTPMS handles every step.
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(290px,1fr))', gap: 20 }}>
-          {FEATURES.map(({ icon: Icon, title, desc }, i) => (
-            <div
-              key={title}
-              onMouseEnter={() => setHoveredFeature(i)}
-              onMouseLeave={() => setHoveredFeature(null)}
-              style={{
-                padding: '28px 26px', borderRadius: 20,
-                background: hoveredFeature === i
-                  ? dark ? 'rgba(10,30,16,.85)' : 'rgba(255,255,255,.95)'
-                  : card,
-                border: `1px solid ${hoveredFeature === i ? `hsla(${accentHue},60%,52%,.45)` : bdr}`,
-                backdropFilter: 'blur(18px)',
-                transition: 'all .25s',
-                transform: hoveredFeature === i ? 'translateY(-6px)' : 'none',
-                boxShadow: hoveredFeature === i
-                  ? `0 20px 48px rgba(0,0,0,.18), 0 0 0 1px hsla(${accentHue},60%,52%,.2), 0 0 32px hsla(${accentHue},70%,50%,.12)`
-                  : '0 4px 16px rgba(0,0,0,.06)',
-                position: 'relative', overflow: 'hidden',
-              }}
-            >
-              {/* Glow on hover */}
-              <div style={{ position: 'absolute', top: 0, right: 0, width: 120, height: 120, borderRadius: '50%', background: `radial-gradient(circle,hsla(${accentHue},70%,55%,.${hoveredFeature===i?'12':'0'}),transparent 70%)`, transition: 'all .25s', pointerEvents: 'none' }} />
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: `hsla(${accentHue},70%,55%,.15)`, border: `1px solid hsla(${accentHue},70%,55%,.2)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                <Icon size={22} style={{ color: acc }} />
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, margin: '0 0 9px', color: dark?'#fff':text }}>{title}</h3>
-              <p style={{ fontSize: 13.5, color: muted, margin: 0, lineHeight: 1.65 }}>{desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════
-          WHO USES IT — with animated rings
-      ══════════════════════════════════════ */}
-      <section style={{ padding: '80px 24px', position: 'relative', overflow: 'hidden' }}>
-        {/* Background rings */}
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '80vw', height: '80vw', maxWidth: 700, maxHeight: 700, borderRadius: '50%', border: `1px solid ${bdr}`, pointerEvents: 'none', animation: 'ringRotate 30s linear infinite' }} />
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '60vw', height: '60vw', maxWidth: 520, maxHeight: 520, borderRadius: '50%', border: `1px solid ${bdr}`, pointerEvents: 'none', animation: 'ringRotate 20s linear infinite reverse' }} />
-
-        <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <div style={{ textAlign: 'center', marginBottom: 50 }}>
-            <p style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: 2.5, textTransform: 'uppercase', color: accLt, marginBottom: 10 }}>User Roles</p>
-            <h2 style={{ fontSize: 'clamp(24px,3.5vw,38px)', fontWeight: 900, margin: '0 0 12px', letterSpacing: -1 }}>Who Uses OTPMS?</h2>
-            <p style={{ color: muted, fontSize: 15 }}>Every role in the academic lifecycle has a dedicated interface.</p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 16 }}>
-            {ROLES.map(({ emoji, label, desc }) => (
-              <div key={label} style={{
-                padding: '24px 16px', borderRadius: 18,
-                background: card, border: `1px solid ${bdr}`,
-                textAlign: 'center', backdropFilter: 'blur(14px)',
-                transition: 'all .2s',
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = `hsla(${accentHue},60%,52%,.35)`; e.currentTarget.style.boxShadow = `0 12px 32px rgba(0,0,0,.12)`; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.borderColor = bdr; e.currentTarget.style.boxShadow = ''; }}
-              >
-                <div style={{ fontSize: 36, marginBottom: 10, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,.2))' }}>{emoji}</div>
-                <div style={{ fontWeight: 800, fontSize: 14, color: dark?'#fff':text, marginBottom: 6 }}>{label}</div>
-                <div style={{ fontSize: 12, color: muted, lineHeight: 1.55 }}>{desc}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
