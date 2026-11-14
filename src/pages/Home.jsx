@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+﻿import { useNavigate } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import PublicNav from '../components/PublicNav';
@@ -11,7 +11,7 @@ const STATS = [
   { value: 'WSU',  label: 'School of Informatics' },
 ];
 
-/* ── Full-page animated canvas ── */
+/* â”€â”€ Full-page animated canvas â”€â”€ */
 function HeroCanvas({ accentHue, dark }) {
   const canvasRef = useRef(null);
   const mouse     = useRef({ x: -999, y: -999 });
@@ -134,9 +134,9 @@ export default function Home() {
     <div style={{ minHeight: '100vh', background: bg, color: text, fontFamily: "'Segoe UI',system-ui,sans-serif", overflowX: 'hidden', transition: 'background .4s,color .4s' }}>
       <PublicNav />
 
-      {/* ════════════════════════════════════════
-          HERO — full viewport
-      ════════════════════════════════════════ */}
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          HERO â€” full viewport
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section style={{ position: 'relative', minHeight: 'calc(100vh - 62px)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
 
         <HeroCanvas accentHue={accentHue} dark={dark} />
@@ -170,11 +170,12 @@ export default function Home() {
             boxShadow: `0 0 20px hsla(${accentHue},70%,50%,.15)`,
           }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: accLt, display: 'inline-block', animation: 'heroPing 1.6s infinite', flexShrink: 0 }} />
-            Wolaita Sodo University · School of Informatics
+            Wolaita Sodo University Â· School of Informatics
           </div>
 
-          {/* BIG WSU Logo — 180px with triple glow rings */}
-          <div style={{ position: 'relative', display: 'inline-block', margin: '0 auto 36px', animation: 'logoEntry 1.4s cubic-bezier(.22,1,.36,1) both', animationDelay: '.1s' }}>
+          {/* BIG WSU Logo â€” 180px with triple glow rings */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 36 }}>
+            <div style={{ position: 'relative', display: 'inline-block', animation: 'logoEntry 1.4s cubic-bezier(.22,1,.36,1) both', animationDelay: '.1s' }}>
             {/* Outer pulse ring */}
             <div style={{ position: 'absolute', inset: -18, borderRadius: '50%', border: `2px solid hsla(${accentHue},70%,55%,.18)`, animation: 'ringPulse 3s ease-in-out infinite' }} />
             {/* Mid ring */}
@@ -193,8 +194,9 @@ export default function Home() {
                 onError={(e) => { e.target.parentElement.innerHTML = '<span style="font-weight:900;font-size:28px;color:#1a5c2a;display:flex;align-items:center;justify-content:center;height:100%">WSU</span>'; }} />
             </div>
           </div>
+          </div>
 
-          {/* Title — slow zoom forward */}
+          {/* Title â€” slow zoom forward */}
           <h1 style={{
             fontSize: 'clamp(28px,5.8vw,66px)', fontWeight: 900,
             lineHeight: 1.08, letterSpacing: -2, margin: '0 0 22px',
@@ -217,7 +219,7 @@ export default function Home() {
             lineHeight: 1.8,
             animation: 'heroFadeUp 1s ease both', animationDelay: '.45s',
           }}>
-            A unified digital platform for Wolaita Sodo University — managing industrial projects and graduate theses from first submission to final publication.
+            A unified digital platform for Wolaita Sodo University â€” managing industrial projects and graduate theses from first submission to final publication.
           </p>
 
           {/* CTA buttons */}
@@ -286,9 +288,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           SECURITY TRUST STRIP
-      ════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section style={{
         padding: '52px 24px',
         background: dark ? 'rgba(3,14,7,.7)' : 'rgba(26,92,42,.04)',
@@ -314,51 +316,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ════════════════════════════════════════
-          CTA BANNER
-      ════════════════════════════════════════ */}
-      <section style={{ padding: '100px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '65vw', height: '55vw', maxWidth: 650, maxHeight: 550, borderRadius: '50%', filter: 'blur(120px)', opacity: dark?.14:.06, background: `hsl(${accentHue},80%,55%)`, pointerEvents: 'none' }} />
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, margin: '0 0 18px', letterSpacing: -1 }}>
-            Ready to Get Started?
-          </h2>
-          <p style={{ color: muted, fontSize: 16, maxWidth: 500, margin: '0 auto 44px', lineHeight: 1.75 }}>
-            Log in with your university credentials and manage your academic work from anywhere, on any device.
-          </p>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/login')} style={{
-              padding: '15px 48px', borderRadius: 14, border: 'none',
-              background: `linear-gradient(135deg,hsl(${accentHue},75%,52%),hsl(${accentHue},65%,36%))`,
-              color: '#fff', fontWeight: 800, fontSize: 16, fontFamily: 'inherit', cursor: 'pointer',
-              boxShadow: `0 12px 40px hsla(${accentHue},70%,45%,.48)`,
-              display: 'inline-flex', alignItems: 'center', gap: 10, transition: 'all .2s',
-            }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 20px 52px hsla(${accentHue},70%,45%,.6)`; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = `0 12px 40px hsla(${accentHue},70%,45%,.48)`; }}
-            >
-              <Shield size={17} /> Login to OTPMS <ArrowRight size={17} />
-            </button>
-            <button onClick={() => navigate('/contact')} style={{
-              padding: '15px 40px', borderRadius: 14, fontFamily: 'inherit',
-              background: dark?'rgba(255,255,255,.07)':'rgba(255,255,255,.8)',
-              backdropFilter: 'blur(14px)',
-              border: `1.5px solid ${bdr}`, color: text,
-              fontWeight: 700, fontSize: 15, cursor: 'pointer', transition: 'all .2s',
-            }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = acc; e.currentTarget.style.transform = 'translateY(-3px)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = bdr; e.currentTarget.style.transform = ''; }}
-            >
-              Contact Us
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer style={{ borderTop: `1px solid ${bdr}`, padding: '22px 24px', textAlign: 'center', fontSize: 12, color: muted, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <Shield size={12} style={{ color: '#10b981' }} />
-        <span>© {new Date().getFullYear()} Melkamu Sime · Wolaita Sodo University · School of Informatics</span>
+        <span>Â© {new Date().getFullYear()} Melkamu Sime Â· Wolaita Sodo University Â· School of Informatics</span>
       </footer>
 
       <style>{`
@@ -375,3 +336,4 @@ export default function Home() {
     </div>
   );
 }
+
