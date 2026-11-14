@@ -2,9 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import PublicNav from '../components/PublicNav';
-import {
-  Shield, ArrowRight, Sparkles, Lock, Globe,
-} from 'lucide-react';
+import { Shield, ArrowRight, Sparkles, Lock, Globe } from 'lucide-react';
 
 const STATS = [
   { value: '6+',   label: 'User Roles' },
@@ -13,7 +11,7 @@ const STATS = [
   { value: 'WSU',  label: 'School of Informatics' },
 ];
 
-/* Animated canvas background */
+/* ── Full-page animated canvas ── */
 function HeroCanvas({ accentHue, dark }) {
   const canvasRef = useRef(null);
   const mouse     = useRef({ x: -999, y: -999 });
@@ -38,44 +36,54 @@ function HeroCanvas({ accentHue, dark }) {
     };
     canvas.addEventListener('mousemove', onMove);
 
-    /* floating orbs */
-    const ORBS = Array.from({ length: 6 }, (_, i) => ({
-      x: Math.random() * 1000,
-      y: Math.random() * 600,
-      r: 80 + Math.random() * 160,
-      vx: (Math.random() - .5) * .18,
-      vy: (Math.random() - .5) * .18,
-      hue: accentHue + i * 28,
-      alpha: .06 + Math.random() * .08,
+    /* drifting orbs */
+    const ORBS = Array.from({ length: 8 }, (_, i) => ({
+      x: Math.random() * 1400, y: Math.random() * 800,
+      r: 100 + Math.random() * 200,
+      vx: (Math.random() - .5) * .15, vy: (Math.random() - .5) * .15,
+      hue: accentHue + i * 22,
+      alpha: .05 + Math.random() * .07,
     }));
 
     /* network nodes */
-    const NODES = Array.from({ length: 60 }, () => ({
-      x: Math.random() * 1000,
-      y: Math.random() * 600,
-      vx: (Math.random() - .5) * .35,
-      vy: (Math.random() - .5) * .35,
-      r: Math.random() * 1.8 + .6,
+    const NODES = Array.from({ length: 70 }, () => ({
+      x: Math.random() * 1400, y: Math.random() * 800,
+      vx: (Math.random() - .5) * .3, vy: (Math.random() - .5) * .3,
+      r: Math.random() * 1.6 + .5,
+    }));
+
+    /* stars */
+    const STARS = Array.from({ length: dark ? 80 : 0 }, () => ({
+      x: Math.random() * 1400, y: Math.random() * 800,
+      r: Math.random() * 1.1 + .2,
+      alpha: Math.random() * .6 + .2,
+      twinkle: Math.random() * Math.PI * 2,
     }));
 
     function draw() {
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
 
+      /* twinkling stars */
+      STARS.forEach((s) => {
+        s.twinkle += .02;
+        const a = s.alpha * (.6 + .4 * Math.sin(s.twinkle));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.fill();
+      });
+
       /* orbs */
       ORBS.forEach((o) => {
         o.x += o.vx; o.y += o.vy;
-        if (o.x < -o.r) o.x = W + o.r;
-        else if (o.x > W + o.r) o.x = -o.r;
-        if (o.y < -o.r) o.y = H + o.r;
-        else if (o.y > H + o.r) o.y = -o.r;
+        if (o.x < -o.r) o.x = W + o.r; else if (o.x > W + o.r) o.x = -o.r;
+        if (o.y < -o.r) o.y = H + o.r; else if (o.y > H + o.r) o.y = -o.r;
         const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
-        g.addColorStop(0, `hsla(${o.hue},80%,${dark?'55%':'45%'},${o.alpha})`);
+        g.addColorStop(0, `hsla(${o.hue},85%,${dark?'58%':'42%'},${o.alpha})`);
         g.addColorStop(1, 'transparent');
         ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2); ctx.fill();
       });
 
       /* nodes + lines */
@@ -83,29 +91,21 @@ function HeroCanvas({ accentHue, dark }) {
         n.x += n.vx; n.y += n.vy;
         if (n.x < 0 || n.x > W) n.vx *= -1;
         if (n.y < 0 || n.y > H) n.vy *= -1;
-
-        /* mouse attraction */
         const dx = mouse.current.x - n.x, dy = mouse.current.y - n.y;
         const d  = Math.sqrt(dx * dx + dy * dy);
-        if (d < 160) { n.x += dx * .006; n.y += dy * .006; }
+        if (d < 180) { n.x += dx * .007; n.y += dy * .007; }
 
-        /* tiny dot */
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${accentHue},75%,${dark?'70%':'45%'},.55)`;
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${accentHue},78%,${dark?'72%':'42%'},.6)`;
         ctx.fill();
 
-        /* connecting lines */
         for (let j = i + 1; j < NODES.length; j++) {
           const o  = NODES[j];
           const dd = Math.hypot(o.x - n.x, o.y - n.y);
-          if (dd < 110) {
-            ctx.beginPath();
-            ctx.moveTo(n.x, n.y);
-            ctx.lineTo(o.x, o.y);
-            ctx.strokeStyle = `hsla(${accentHue},65%,${dark?'65%':'40%'},${(1 - dd / 110) * .28})`;
-            ctx.lineWidth = .5;
-            ctx.stroke();
+          if (dd < 115) {
+            ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(o.x, o.y);
+            ctx.strokeStyle = `hsla(${accentHue},65%,${dark?'65%':'38%'},${(1 - dd / 115) * .25})`;
+            ctx.lineWidth = .5; ctx.stroke();
           }
         }
       });
@@ -113,135 +113,139 @@ function HeroCanvas({ accentHue, dark }) {
       raf = requestAnimationFrame(draw);
     }
     draw();
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      canvas.removeEventListener('mousemove', onMove);
-    };
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); canvas.removeEventListener('mousemove', onMove); };
   }, [accentHue, dark]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'auto' }}
-    />
-  );
+  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'auto' }} />;
 }
 
 export default function Home() {
   const navigate            = useNavigate();
   const { accentHue, dark } = useTheme();
-  const bg    = dark
-    ? 'linear-gradient(135deg,#010a04 0%,#021208 40%,#030e06 100%)'
-    : 'linear-gradient(135deg,#e4f5eb 0%,#f2fbf5 50%,#e8f7ee 100%)';
+
+  const bg    = dark ? '#010a04' : 'linear-gradient(135deg,#e4f5eb 0%,#f2fbf5 50%,#e8f7ee 100%)';
   const text  = dark ? '#e2f0e8' : '#0d2e15';
   const muted = dark ? 'rgba(226,240,232,.48)' : 'rgba(13,46,21,.52)';
-  const card  = dark ? 'rgba(4,16,8,.7)'  : 'rgba(255,255,255,.8)';
   const bdr   = dark ? 'rgba(255,255,255,.07)' : 'rgba(26,92,42,.1)';
   const acc   = `hsl(${accentHue},72%,${dark?'54%':'42%'})`;
-  const accLt = `hsl(${accentHue},80%,${dark?'68%':'50%'})`;
+  const accLt = `hsl(${accentHue},82%,${dark?'70%':'50%'})`;
 
   return (
     <div style={{ minHeight: '100vh', background: bg, color: text, fontFamily: "'Segoe UI',system-ui,sans-serif", overflowX: 'hidden', transition: 'background .4s,color .4s' }}>
       <PublicNav />
 
-      {/* ══════════════════════════════════════
-          HERO — full viewport height
-      ══════════════════════════════════════ */}
+      {/* ════════════════════════════════════════
+          HERO — full viewport
+      ════════════════════════════════════════ */}
       <section style={{ position: 'relative', minHeight: 'calc(100vh - 62px)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
 
-        {/* Animated canvas */}
         <HeroCanvas accentHue={accentHue} dark={dark} />
 
-        {/* Extra static glow behind content */}
+        {/* Deep glow layers */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }}>
-          <div style={{ position: 'absolute', top: '20%', left: '15%', width: '45vw', height: '45vw', borderRadius: '50%', filter: 'blur(110px)', opacity: dark?.15:.08, background: `hsl(${accentHue},80%,55%)` }} />
-          <div style={{ position: 'absolute', bottom: '10%', right: '10%', width: '35vw', height: '35vw', borderRadius: '50%', filter: 'blur(130px)', opacity: dark?.1:.06, background: `hsl(${accentHue + 60},70%,50%)` }} />
+          <div style={{ position: 'absolute', top: '-5%', left: '50%', transform: 'translateX(-50%)', width: '80vw', height: '70vw', maxWidth: 900, maxHeight: 800, borderRadius: '50%', filter: 'blur(130px)', opacity: dark?.18:.08, background: `hsl(${accentHue},80%,55%)` }} />
+          <div style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: '40vw', height: '40vw', borderRadius: '50%', filter: 'blur(120px)', opacity: dark?.1:.05, background: `hsl(${accentHue+70},70%,52%)` }} />
+          <div style={{ position: 'absolute', top: '30%', left: '-8%', width: '30vw', height: '30vw', borderRadius: '50%', filter: 'blur(110px)', opacity: dark?.08:.04, background: `hsl(${accentHue-40},70%,50%)` }} />
+        </div>
+
+        {/* Decorative rotating rings */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 1 }}>
+          <div style={{ position: 'absolute', width: '70vw', height: '70vw', maxWidth: 700, maxHeight: 700, borderRadius: '50%', border: `1px solid hsla(${accentHue},60%,55%,.08)`, animation: 'ringRotate 40s linear infinite' }} />
+          <div style={{ position: 'absolute', width: '52vw', height: '52vw', maxWidth: 520, maxHeight: 520, borderRadius: '50%', border: `1px solid hsla(${accentHue},60%,55%,.06)`, animation: 'ringRotate 28s linear infinite reverse' }} />
+          <div style={{ position: 'absolute', width: '36vw', height: '36vw', maxWidth: 360, maxHeight: 360, borderRadius: '50%', border: `1px dashed hsla(${accentHue},60%,55%,.05)`, animation: 'ringRotate 18s linear infinite' }} />
         </div>
 
         {/* Hero content */}
-        <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '60px 24px', maxWidth: 820, width: '100%' }}>
+        <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '60px 24px', maxWidth: 860, width: '100%' }}>
 
-          {/* Pill badge */}
+          {/* Live badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '7px 20px', borderRadius: 999, marginBottom: 28,
-            fontSize: 12.5, fontWeight: 800, letterSpacing: 1.8, textTransform: 'uppercase',
-            background: dark ? 'rgba(255,255,255,.07)' : 'rgba(26,92,42,.08)',
-            border: `1px solid hsla(${accentHue},65%,52%,.4)`,
-            color: accLt,
+            padding: '7px 20px', borderRadius: 999, marginBottom: 32,
+            fontSize: 12, fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase',
+            background: dark ? 'rgba(255,255,255,.06)' : 'rgba(26,92,42,.07)',
+            border: `1px solid hsla(${accentHue},65%,52%,.35)`,
+            color: accLt, backdropFilter: 'blur(10px)',
             animation: 'heroFadeUp .9s ease both',
-            backdropFilter: 'blur(8px)',
+            boxShadow: `0 0 20px hsla(${accentHue},70%,50%,.15)`,
           }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: accLt, display: 'inline-block', animation: 'heroPing 1.6s infinite', flexShrink: 0 }} />
             Wolaita Sodo University · School of Informatics
           </div>
 
-          {/* WSU Logo */}
-          <div style={{
-            width: 110, height: 110, borderRadius: '50%', overflow: 'hidden',
-            margin: '0 auto 28px',
-            border: `4px solid ${acc}`,
-            boxShadow: `0 0 0 10px hsla(${accentHue},65%,50%,.1), 0 20px 60px rgba(0,0,0,.3), 0 0 80px hsla(${accentHue},70%,50%,.2)`,
-            background: '#fff',
-            animation: 'logoSpin 1.2s cubic-bezier(.22,1,.36,1) both',
-            animationDelay: '.15s',
-          }}>
-            <img src="/wsu-logo.png" alt="WSU" style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              onError={(e) => { e.target.parentElement.innerHTML = '<span style="font-weight:900;font-size:20px;color:#1a5c2a;display:flex;align-items:center;justify-content:center;height:100%">WSU</span>'; }} />
+          {/* BIG WSU Logo — 180px with triple glow rings */}
+          <div style={{ position: 'relative', display: 'inline-block', margin: '0 auto 36px', animation: 'logoEntry 1.4s cubic-bezier(.22,1,.36,1) both', animationDelay: '.1s' }}>
+            {/* Outer pulse ring */}
+            <div style={{ position: 'absolute', inset: -18, borderRadius: '50%', border: `2px solid hsla(${accentHue},70%,55%,.18)`, animation: 'ringPulse 3s ease-in-out infinite' }} />
+            {/* Mid ring */}
+            <div style={{ position: 'absolute', inset: -10, borderRadius: '50%', border: `1.5px solid hsla(${accentHue},70%,55%,.28)`, animation: 'ringPulse 3s ease-in-out infinite', animationDelay: '.5s' }} />
+            {/* Logo circle */}
+            <div style={{
+              width: 180, height: 180, borderRadius: '50%', overflow: 'hidden',
+              border: `5px solid ${acc}`,
+              boxShadow: `0 0 0 3px hsla(${accentHue},70%,55%,.35),
+                          0 0 60px hsla(${accentHue},80%,55%,.35),
+                          0 24px 80px rgba(0,0,0,.35)`,
+              background: '#fff',
+            }}>
+              <img src="/wsu-logo.png" alt="WSU"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                onError={(e) => { e.target.parentElement.innerHTML = '<span style="font-weight:900;font-size:28px;color:#1a5c2a;display:flex;align-items:center;justify-content:center;height:100%">WSU</span>'; }} />
+            </div>
           </div>
 
-          {/* Main heading — zoom forward */}
+          {/* Title — slow zoom forward */}
           <h1 style={{
-            fontSize: 'clamp(26px,5.5vw,62px)', fontWeight: 900,
-            lineHeight: 1.1, letterSpacing: -2, margin: '0 0 20px',
-            animation: 'titleZoomIn 1.4s cubic-bezier(.22,1,.36,1) both',
-            animationDelay: '.2s',
+            fontSize: 'clamp(28px,5.8vw,66px)', fontWeight: 900,
+            lineHeight: 1.08, letterSpacing: -2, margin: '0 0 22px',
+            animation: 'titleZoomIn 1.5s cubic-bezier(.22,1,.36,1) both',
+            animationDelay: '.25s',
           }}>
             Online Thesis &amp; Project<br />
             <span style={{
-              background: `linear-gradient(135deg, ${accLt} 0%, hsl(${accentHue+40},80%,${dark?'72%':'52%'}) 100%)`,
+              background: `linear-gradient(135deg, ${accLt} 0%, hsl(${accentHue+45},85%,${dark?'74%':'54%'}) 50%, hsl(${accentHue-20},75%,${dark?'65%':'48%'}) 100%)`,
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              filter: `drop-shadow(0 0 24px hsla(${accentHue},80%,55%,.4))`,
+              filter: `drop-shadow(0 0 32px hsla(${accentHue},80%,55%,.5))`,
+              animation: 'gradientShift 5s ease-in-out infinite',
             }}>
               Management System
             </span>
           </h1>
 
           <p style={{
-            fontSize: 17, color: muted, maxWidth: 560, margin: '0 auto 40px',
-            lineHeight: 1.75,
-            animation: 'heroFadeUp 1s ease both', animationDelay: '.4s',
+            fontSize: 17, color: muted, maxWidth: 580, margin: '0 auto 44px',
+            lineHeight: 1.8,
+            animation: 'heroFadeUp 1s ease both', animationDelay: '.45s',
           }}>
-            A unified digital platform for Wolaita Sodo University — managing industrial projects and graduate theses from submission to publication.
+            A unified digital platform for Wolaita Sodo University — managing industrial projects and graduate theses from first submission to final publication.
           </p>
 
           {/* CTA buttons */}
           <div className="pub-hero-btns" style={{
-            display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap',
-            animation: 'heroFadeUp 1s ease both', animationDelay: '.55s',
+            display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap',
+            animation: 'heroFadeUp 1s ease both', animationDelay: '.6s',
           }}>
             <button onClick={() => navigate('/login')} style={{
-              padding: '14px 36px', borderRadius: 14, border: 'none',
+              padding: '15px 40px', borderRadius: 14, border: 'none',
               background: `linear-gradient(135deg,hsl(${accentHue},75%,52%),hsl(${accentHue},65%,36%))`,
               color: '#fff', fontWeight: 800, fontSize: 16, fontFamily: 'inherit', cursor: 'pointer',
-              boxShadow: `0 10px 32px hsla(${accentHue},70%,45%,.5)`,
-              display: 'inline-flex', alignItems: 'center', gap: 9, transition: 'all .2s',
+              boxShadow: `0 10px 36px hsla(${accentHue},70%,45%,.5)`,
+              display: 'inline-flex', alignItems: 'center', gap: 10, transition: 'all .2s',
             }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)'; e.currentTarget.style.boxShadow = `0 16px 40px hsla(${accentHue},70%,45%,.6)`; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = `0 10px 32px hsla(${accentHue},70%,45%,.5)`; }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'; e.currentTarget.style.boxShadow = `0 18px 44px hsla(${accentHue},70%,45%,.65)`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = `0 10px 36px hsla(${accentHue},70%,45%,.5)`; }}
             >
-              <Sparkles size={17} /> Get Started <ArrowRight size={17} />
+              <Sparkles size={18} /> Get Started <ArrowRight size={18} />
             </button>
             <button onClick={() => navigate('/about')} style={{
-              padding: '14px 36px', borderRadius: 14, fontFamily: 'inherit',
-              background: dark ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.75)',
-              backdropFilter: 'blur(12px)',
+              padding: '15px 40px', borderRadius: 14, fontFamily: 'inherit',
+              background: dark ? 'rgba(255,255,255,.07)' : 'rgba(255,255,255,.8)',
+              backdropFilter: 'blur(14px)',
               border: `1.5px solid ${bdr}`, color: text,
               fontWeight: 700, fontSize: 16, cursor: 'pointer', transition: 'all .2s',
             }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = `hsla(${accentHue},60%,52%,.5)`; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = bdr; e.currentTarget.style.transform = ''; }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = acc; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 12px 32px rgba(0,0,0,.12)`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = bdr; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
             >
               Learn More
             </button>
@@ -249,14 +253,20 @@ export default function Home() {
 
           {/* Stats strip */}
           <div style={{
-            display: 'flex', justifyContent: 'center', gap: 32, flexWrap: 'wrap',
-            marginTop: 56,
-            animation: 'heroFadeUp 1s ease both', animationDelay: '.7s',
+            display: 'flex', justifyContent: 'center', gap: 40, flexWrap: 'wrap',
+            marginTop: 60, paddingTop: 40,
+            borderTop: `1px solid ${bdr}`,
+            animation: 'heroFadeUp 1s ease both', animationDelay: '.75s',
           }}>
             {STATS.map(({ value, label }) => (
               <div key={label} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 'clamp(22px,3vw,32px)', fontWeight: 900, color: dark?'#fff':text, lineHeight: 1 }}>{value}</div>
-                <div style={{ fontSize: 11.5, color: muted, fontWeight: 600, letterSpacing: .8, textTransform: 'uppercase', marginTop: 4 }}>{label}</div>
+                <div style={{
+                  fontSize: 'clamp(24px,3.2vw,36px)', fontWeight: 900,
+                  color: dark ? '#fff' : text, lineHeight: 1,
+                  background: `linear-gradient(135deg,${dark?'#fff':text},${accLt})`,
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>{value}</div>
+                <div style={{ fontSize: 11, color: muted, fontWeight: 700, letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 5 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -264,74 +274,80 @@ export default function Home() {
 
         {/* Scroll indicator */}
         <div style={{
-          position: 'absolute', bottom: 28, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-          color: muted, fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase',
-          animation: 'heroFadeUp 1s ease both', animationDelay: '1s',
+          position: 'absolute', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+          color: muted, fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase',
+          animation: 'heroFadeUp 1s ease both', animationDelay: '1.1s',
         }}>
-          <span>Scroll</span>
-          <div style={{ width: 1.5, height: 36, background: `linear-gradient(to bottom,${acc},transparent)`, animation: 'scrollPulse 1.8s ease-in-out infinite' }} />
+          <div style={{ width: 24, height: 36, borderRadius: 12, border: `1.5px solid ${muted}`, display: 'flex', justifyContent: 'center', paddingTop: 6 }}>
+            <div style={{ width: 3, height: 8, borderRadius: 2, background: acc, animation: 'mouseDot 1.8s ease-in-out infinite' }} />
+          </div>
+          <span style={{ marginTop: 4 }}>Scroll</span>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════
-          SECURITY STRIP
-      ══════════════════════════════════════ */}
-      <section style={{ padding: '48px 24px', background: dark?'rgba(4,16,8,.6)':'rgba(26,92,42,.05)', borderTop: `1px solid ${bdr}`, borderBottom: `1px solid ${bdr}` }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap', textAlign: 'center' }}>
+      {/* ════════════════════════════════════════
+          SECURITY TRUST STRIP
+      ════════════════════════════════════════ */}
+      <section style={{
+        padding: '52px 24px',
+        background: dark ? 'rgba(3,14,7,.7)' : 'rgba(26,92,42,.04)',
+        borderTop: `1px solid ${bdr}`, borderBottom: `1px solid ${bdr}`,
+        backdropFilter: 'blur(12px)',
+      }}>
+        <div style={{ maxWidth: 920, margin: '0 auto', display: 'flex', justifyContent: 'center', gap: 52, flexWrap: 'wrap' }}>
           {[
-            { icon: Shield,  title: 'Role-Based Access',    desc: 'Each user sees only what they need.' },
-            { icon: Lock,    title: 'Sanctum Auth Tokens',  desc: 'Secure bearer token authentication.' },
-            { icon: Globe,   title: 'Public Repository',    desc: 'Published works accessible to all.' },
+            { icon: Shield, title: 'Role-Based Access',   desc: 'Each user sees only what they are authorised for.' },
+            { icon: Lock,   title: 'Sanctum Auth Tokens', desc: 'Secure Laravel Sanctum bearer token authentication.' },
+            { icon: Globe,  title: 'Public Repository',   desc: 'Completed approved works open to all visitors.' },
           ].map(({ icon: Icon, title, desc }) => (
-            <div key={title} style={{ display: 'flex', alignItems: 'center', gap: 14, maxWidth: 240 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: `hsla(${accentHue},70%,55%,.13)`, border: `1px solid hsla(${accentHue},70%,55%,.2)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon size={19} style={{ color: acc }} />
+            <div key={title} style={{ display: 'flex', alignItems: 'center', gap: 16, maxWidth: 260 }}>
+              <div style={{ width: 46, height: 46, borderRadius: 13, background: `hsla(${accentHue},70%,55%,.13)`, border: `1px solid hsla(${accentHue},70%,55%,.22)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 0 16px hsla(${accentHue},70%,50%,.12)` }}>
+                <Icon size={20} style={{ color: acc }} />
               </div>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontWeight: 800, fontSize: 13.5, color: dark?'#fff':text, marginBottom: 2 }}>{title}</div>
-                <div style={{ fontSize: 12.5, color: muted }}>{desc}</div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 14, color: dark?'#fff':text, marginBottom: 3 }}>{title}</div>
+                <div style={{ fontSize: 12.5, color: muted, lineHeight: 1.55 }}>{desc}</div>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ══════════════════════════════════════
+      {/* ════════════════════════════════════════
           CTA BANNER
-      ══════════════════════════════════════ */}
+      ════════════════════════════════════════ */}
       <section style={{ padding: '100px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '60vw', height: '50vw', maxWidth: 600, maxHeight: 500, borderRadius: '50%', filter: 'blur(110px)', opacity: dark?.14:.07, background: `hsl(${accentHue},80%,55%)`, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '65vw', height: '55vw', maxWidth: 650, maxHeight: 550, borderRadius: '50%', filter: 'blur(120px)', opacity: dark?.14:.06, background: `hsl(${accentHue},80%,55%)`, pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <p style={{ fontSize: 11.5, fontWeight: 800, letterSpacing: 2.5, textTransform: 'uppercase', color: accLt, marginBottom: 14 }}>Access Your Account</p>
-          <h2 style={{ fontSize: 'clamp(26px,4vw,46px)', fontWeight: 900, margin: '0 0 16px', letterSpacing: -1 }}>
+          <h2 style={{ fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, margin: '0 0 18px', letterSpacing: -1 }}>
             Ready to Get Started?
           </h2>
-          <p style={{ color: muted, fontSize: 16, marginBottom: 40, maxWidth: 480, margin: '0 auto 40px', lineHeight: 1.7 }}>
-            Log in with your university credentials and manage your academic work from anywhere.
+          <p style={{ color: muted, fontSize: 16, maxWidth: 500, margin: '0 auto 44px', lineHeight: 1.75 }}>
+            Log in with your university credentials and manage your academic work from anywhere, on any device.
           </p>
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => navigate('/login')} style={{
-              padding: '15px 44px', borderRadius: 14, border: 'none',
+              padding: '15px 48px', borderRadius: 14, border: 'none',
               background: `linear-gradient(135deg,hsl(${accentHue},75%,52%),hsl(${accentHue},65%,36%))`,
               color: '#fff', fontWeight: 800, fontSize: 16, fontFamily: 'inherit', cursor: 'pointer',
-              boxShadow: `0 12px 36px hsla(${accentHue},70%,45%,.45)`,
+              boxShadow: `0 12px 40px hsla(${accentHue},70%,45%,.48)`,
               display: 'inline-flex', alignItems: 'center', gap: 10, transition: 'all .2s',
             }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = ''; }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 20px 52px hsla(${accentHue},70%,45%,.6)`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = `0 12px 40px hsla(${accentHue},70%,45%,.48)`; }}
             >
               <Shield size={17} /> Login to OTPMS <ArrowRight size={17} />
             </button>
             <button onClick={() => navigate('/contact')} style={{
-              padding: '15px 36px', borderRadius: 14, fontFamily: 'inherit',
-              background: dark?'rgba(255,255,255,.07)':'rgba(255,255,255,.75)',
-              backdropFilter: 'blur(12px)',
+              padding: '15px 40px', borderRadius: 14, fontFamily: 'inherit',
+              background: dark?'rgba(255,255,255,.07)':'rgba(255,255,255,.8)',
+              backdropFilter: 'blur(14px)',
               border: `1.5px solid ${bdr}`, color: text,
               fontWeight: 700, fontSize: 15, cursor: 'pointer', transition: 'all .2s',
             }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = `hsla(${accentHue},60%,52%,.5)`; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = bdr; }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = acc; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = bdr; e.currentTarget.style.transform = ''; }}
             >
               Contact Us
             </button>
@@ -346,12 +362,15 @@ export default function Home() {
       </footer>
 
       <style>{`
-        @keyframes heroPing     { 0%,100%{transform:scale(1);opacity:1}  50%{transform:scale(1.8);opacity:.35} }
-        @keyframes heroFadeUp   { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes titleZoomIn  { from{opacity:0;transform:scale(.7) translateY(32px)} to{opacity:1;transform:scale(1) translateY(0)} }
-        @keyframes logoSpin     { 0%{opacity:0;transform:scale(.5) rotate(-15deg)} 60%{transform:scale(1.08) rotate(3deg)} 100%{opacity:1;transform:scale(1) rotate(0)} }
-        @keyframes scrollPulse  { 0%,100%{opacity:1;transform:scaleY(1)} 50%{opacity:.4;transform:scaleY(.6)} }
-        @keyframes ringRotate   { from{transform:translate(-50%,-50%) rotate(0deg)} to{transform:translate(-50%,-50%) rotate(360deg)} }
+        @keyframes heroPing      { 0%,100%{transform:scale(1);opacity:1}  50%{transform:scale(1.9);opacity:.3} }
+        @keyframes heroFadeUp    { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes titleZoomIn   { from{opacity:0;transform:scale(.68) translateY(36px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        @keyframes logoEntry     { 0%{opacity:0;transform:scale(.45) rotate(-18deg)} 60%{transform:scale(1.07) rotate(3deg)} 100%{opacity:1;transform:scale(1) rotate(0)} }
+        @keyframes ringPulse     { 0%,100%{opacity:.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
+        @keyframes ringRotate    { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes scrollPulse   { 0%,100%{opacity:1} 50%{opacity:.35} }
+        @keyframes mouseDot      { 0%{transform:translateY(0);opacity:1} 60%{transform:translateY(14px);opacity:.2} 100%{transform:translateY(0);opacity:1} }
+        @keyframes gradientShift { 0%,100%{filter:drop-shadow(0 0 24px hsla(var(--ah,142),80%,55%,.4))} 50%{filter:drop-shadow(0 0 40px hsla(var(--ah,142),80%,65%,.7))} }
       `}</style>
     </div>
   );
