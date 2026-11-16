@@ -30,6 +30,7 @@ import Documents from './pages/Documents';
 import Reports from './pages/Reports';
 import ManageUsers from './pages/ManageUsers';
 import StudentWorks from './pages/StudentWorks';
+import FinalGrades from './pages/FinalGrades';
 import Profile from './pages/Profile';
 
 export default function App() {
@@ -89,6 +90,7 @@ export default function App() {
 
         {/* Reports & Admin */}
         <Route path="/reports" element={<ProtectedRoute roles={['DepartmentHead', 'Administrator', 'UGPC', 'GPC']}><Reports /></ProtectedRoute>} />
+        <Route path="/final-grades" element={<ProtectedRoute roles={['UGPC', 'GPC', 'Administrator', 'Advisor', 'DepartmentHead']}><FinalGrades /></ProtectedRoute>} />
         <Route path="/manage-users" element={<ProtectedRoute roles={['Administrator']}><ManageUsers /></ProtectedRoute>} />
         <Route path="/student-works" element={<StudentWorks />} />
         <Route path="/profile" element={<Profile />} />

@@ -30,6 +30,7 @@ const TITLES = {
   '/upload-document':         { title: 'Upload Document',         subtitle: 'Submit your work to the system' },
   '/documents':               { title: 'Documents',               subtitle: 'Submitted project and thesis files' },
   '/reports':                 { title: 'Reports',                 subtitle: 'Timely reports on theses and projects' },
+  '/final-grades':            { title: 'Final Grades',             subtitle: 'Compile and view student final grades' },
   '/manage-users':            { title: 'Manage Users',            subtitle: 'Create, update and remove user accounts' },
   '/student-works':           { title: 'Student Works',           subtitle: 'Public repository of completed works' },
   '/profile':                 { title: 'My Profile',              subtitle: 'Your account information' },

@@ -54,10 +54,11 @@ export const NAV = [
   {
     section: 'Reports & Admin',
     items: [
-      { to: '/reports', label: 'Reports', icon: '📊', roles: ['DepartmentHead', 'Administrator', 'UGPC', 'GPC'] },
-      { to: '/manage-users', label: 'Manage Users', icon: '⚙️', roles: ['Administrator'] },
-      { to: '/student-works', label: 'Student Works', icon: '🎓', roles: ['*'] },
-      { to: '/profile', label: 'My Profile', icon: '👤', roles: ['*'] },
+      { to: '/final-grades',  label: 'Final Grades',   icon: '🎓', roles: ['UGPC', 'GPC', 'Administrator', 'Advisor', 'DepartmentHead'] },
+      { to: '/reports',       label: 'Reports',         icon: '📊', roles: ['DepartmentHead', 'Administrator', 'UGPC', 'GPC'] },
+      { to: '/manage-users',  label: 'Manage Users',    icon: '⚙️', roles: ['Administrator'] },
+      { to: '/student-works', label: 'Student Works',   icon: '📚', roles: ['*'] },
+      { to: '/profile',       label: 'My Profile',      icon: '👤', roles: ['*'] },
     ],
   },
 ];
