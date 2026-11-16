@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // The Laravel API is served from the local dev server (php artisan serve).
-const baseURL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+const baseURL = import.meta.env.VITE_API_URL || 'https://otpms-backend.onrender.com/api';
 
 const client = axios.create({ baseURL, withCredentials: false });
 
